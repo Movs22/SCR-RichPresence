@@ -25,6 +25,7 @@ public class App {
 	private static Color QD = new Color(216, 67, 64);
 	private static Color RED = new Color(255, 61, 61);
 	private static Color VIP = new Color(127, 85, 0);
+	private static Color SPAWN = new Color(0, 170, 255);
 	private static Color WHITE = new Color(255, 255, 255);
 	private static Color SG = new Color(237, 228, 228);
 	private static long start = System.currentTimeMillis();
@@ -40,21 +41,12 @@ public class App {
         DiscordRPC.discordRegister("1227325093781311663", "");
 		System.out.println("Fetching menu...");
 		ts = new Tesseract();
-		JFrame frame = new JFrame();
-		frame.getContentPane().setLayout(new FlowLayout());
-		frame.pack();
-		JLabel label2 = new JLabel(new ImageIcon());
-		frame.getContentPane().add(label2);
-		JLabel label = new JLabel(new ImageIcon());
-		frame.getContentPane().add(label);
-		JLabel label3 = new JLabel(new ImageIcon());
-		frame.getContentPane().add(label3);
 		ts.setTessVariable("tessedit_char_whitelist", "0123456789:+-. _[]ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
 		//ts.setTessVariable("textord_old_xheight ", "true");
 		//ts.setTessVariable("textord_min_xheight", "10");
 		//ts.setTessVariable("textord_max_noise_size", "10");
 		ts.setTessVariable("max_permuter_attempts", "500");
-		ts.setDatapath("./tessdata");
+		ts.setDatapath("./");
 		Rectangle screen = new Rectangle(0, 0, 1920, 1080);
 		robot = new Robot();
 		BufferedImage img;
@@ -73,9 +65,6 @@ public class App {
 		String zone = "";
 		String currentStop = "";
 		String plats = "";
-		frame.setSize(400, 400);
-		frame.setVisible(true);
-		frame.setAlwaysOnTop(true);
 		while(true) {
 			img = robot.createScreenCapture(screen);
 			if(img.getRGB(995, 947) == LOAD.getRGB()) {
@@ -95,6 +84,8 @@ public class App {
 			} else if(img.getRGB(838, 40) == SG.getRGB()) {
 				status = validate(CurrentWindow.SIGNALLING, status);
 			} else if(img.getRGB(862, 303) == QD.getRGB()) {
+				status = validate(CurrentWindow.SPAWN_MENU, status);
+			} else if(img.getRGB(396, 1008) == SPAWN.getRGB()) {
 				status = validate(CurrentWindow.SPAWN_MENU, status);
 			}
 			if(img.getRGB(1877, 9) == VIP.getRGB()) {
@@ -119,11 +110,8 @@ public class App {
 					}
 				}
 				if(curimg != null) {
-				label2.setIcon(new ImageIcon(curimg));
-				label.setIcon(new ImageIcon(stationimg));
 				}
 			}
-			label3.setIcon(new ImageIcon(img));
 			
 			// TODO:
 			// add DS status
@@ -188,7 +176,14 @@ public class App {
 					}
 					rank = "";
 				} else if(status == CurrentWindow.DISPATCHING) {
-					presence = new DiscordRichPresence.Builder(vip ? "In a private server" : "In a public server");
+					Color col = new Color(img.getRGB(1810, 497));
+					if((col.getRed() < 100) && (col.getGreen() > 160) && (col.getBlue() > 160)) {
+						BufferedImage headcode = img.getSubimage(1798, 476, 65, 30);
+						BufferedImage plat = img.getSubimage(1755, 434, 144, 30);
+						presence = new DiscordRichPresence.Builder("Dispatching " + ts.doOCR(headcode).replaceAll("\\n", "").toUpperCase() + " at " + ts.doOCR(plat).replaceAll("\\n", ""));
+					} else {
+						presence = new DiscordRichPresence.Builder(vip ? "In a private server" : "In a public server");
+					}
 					presence.setDetails("Dispatching at " + shortify2(currentStop));
 					presence.setStartTimestamps(start);
 					presence.setBigImage("scrlogo", "SCR 1.10.13");
@@ -205,9 +200,15 @@ public class App {
 							BufferedImage c = img.getSubimage(1745, 455, 175, 23);
 							user = ts.doOCR(c);
 						}
-						rank = rank.split("\\]")[0];
-						rank = rank.split("\\[").length > 1 ? rank.split("\\[")[1] : rank;
-						rank.replaceAll("6", "G");
+						if(rank.contains("Senior Guard")) rank = "SGD";
+						if(rank.contains("Senior Dispatcher")) rank = "SDS";
+						if(rank.contains("Guard")) rank = "GD";
+						if(rank.contains("Dispatcher")) rank = "DS";
+						else {
+							rank = rank.split("\\]")[0];
+							rank = rank.split("\\[").length > 1 ? rank.split("\\[")[1] : rank;
+							rank.replaceAll("6", "G");
+						}
 						presence = new DiscordRichPresence.Builder("Next stop: " + shortify(t));
 						presence.setDetails("Guarding [" + rank + "] " + user);
 					} else {
