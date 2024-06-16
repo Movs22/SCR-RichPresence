@@ -1,0 +1,27 @@
+package com.movies22.scr.rpc;
+
+import java.awt.Color;
+
+
+public enum Operators {
+	AIRLINK((new Color(226, 122, 20)), "Airlink"),
+	CONNECT((new Color(0, 158, 225)), "Connect"),
+	EXPRESS((new Color(255, 0, 128)), "Express"),
+	WATERLINE((new Color(73, 95, 124)), "Waterline"),
+	UNKNOWN((new Color(0, 0, 0)), "unknown");
+	public String operator;
+	public Color color;
+	public String name;
+	Operators(Color color, String n) {
+		this.color = color;
+		this.name = n;
+	}
+	
+	public Operators getOperator(int col) {
+		if(col == AIRLINK.color.getRGB()) return AIRLINK;
+		if(col == CONNECT.color.getRGB()) return CONNECT;
+		if(col == EXPRESS.color.getRGB()) return EXPRESS;
+		if(col == WATERLINE.color.getRGB()) return WATERLINE;
+		return UNKNOWN;
+	}
+}
