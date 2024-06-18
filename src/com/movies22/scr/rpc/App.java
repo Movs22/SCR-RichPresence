@@ -27,7 +27,7 @@ public class App {
 	private static Color VIP = new Color(127, 85, 0);
 	private static Color SPAWN = new Color(0, 170, 255);
 	private static Color WHITE = new Color(255, 255, 255);
-	private static Color SG = new Color(237, 228, 228);
+	private static Color SG = new Color(232, 228, 228);
 	private static Color ROBLOX = new Color(254, 254, 254);
 	private static long start = System.currentTimeMillis();
 	public static void main(String[] args) throws Exception {
@@ -46,7 +46,7 @@ public class App {
 		//ts.setTessVariable("textord_old_xheight ", "true");
 		//ts.setTessVariable("textord_min_xheight", "10");
 		//ts.setTessVariable("textord_max_noise_size", "10");
-		ts.setTessVariable("max_permuter_attempts", "500");
+		ts.setTessVariable("max_permuter_attempts", "750");
 		ts.setDatapath("./");
 		Rectangle screen = new Rectangle(0, 0, 1920, 1080);
 		robot = new Robot();
@@ -84,6 +84,7 @@ public class App {
 			} else {
 				lastCheck = 0L;
 			}
+			Color sgcol = new Color(img.getRGB(838, 40));
 			if(img.getRGB(995, 947) == LOAD.getRGB()) {
 				status = validate(CurrentWindow.LOADING, status);
 			} else if(img.getRGB(158, 436) == MAIN_MENU.getRGB()) {
@@ -96,7 +97,7 @@ public class App {
 				status = validate(CurrentWindow.GUARDING, status);
 			} else if(img.getRGB(1240, 1028) == WHITE.getRGB()) {
 				status = validate(CurrentWindow.DRIVING, status);
-			} else if(img.getRGB(838, 40) == SG.getRGB()) {
+			} else if(sgcol.getRed() > 220 && sgcol.getGreen() > 210 && sgcol.getBlue() > 210) {
 				status = validate(CurrentWindow.SIGNALLING, status);
 			} else if(img.getRGB(862, 303) == QD.getRGB()) {
 				status = validate(CurrentWindow.SPAWN_MENU, status);
@@ -185,6 +186,11 @@ public class App {
 							Color check = new Color(img.getRGB(1069, 1040));
 							if(check.getRed() > 200 && check.getGreen() > 120 && check.getBlue() < 40) {
 								loading = true;
+								BufferedImage y = img.getSubimage(770, 1005, 40, 17);
+								String h = ts.doOCR(y);
+								if(h == "") continue;
+								if(h.length() < 4) h = currentHeadcode;
+								currentHeadcode = parseHeadcode(h, curOperator);
 								if(message < 5000) {
 									BufferedImage a = img.getSubimage(665, 1021, 245, 30);
 									curStop = ts.doOCR(a);
@@ -207,10 +213,11 @@ public class App {
 									Thread.sleep(1000);
 								}
 								BufferedImage c;
-								BufferedImage y = img.getSubimage(769, 1004, 45, 17);
+								BufferedImage y = img.getSubimage(770, 1005, 40, 17);
 								String h = ts.doOCR(y);
 								if(h == "") continue;
-								currentHeadcode = parseHeadcode(h);
+								if(h.length() < 4) h = currentHeadcode;
+								currentHeadcode = parseHeadcode(h, curOperator);
 								if(message < 5000) {
 								BufferedImage a = img.getSubimage(665, 1021, 245, 30);
 								curStop2 = ts.doOCR(a);
@@ -259,7 +266,7 @@ public class App {
 											currentDest = "Leighton West";
 											break;
 										case 'l':
-											currentDest = "Llyn-by-the-sea";
+											currentDest = "Llyn-by-the-Sea";
 											break;
 										case 'm':
 											currentDest = "Morganstown";
@@ -370,12 +377,22 @@ public class App {
 					presence.setSmallImage("gd", "Guarding");
 					DiscordRPC.discordUpdatePresence(presence.build());
 				} else if(status == CurrentWindow.SIGNALLING) {
-					if(img.getRGB(838, 40) == SG.getRGB()) {
-						if(zone == "" ) {
+					Color col = new Color(img.getRGB(838, 40));
+					if(col.getRed() > 220 && col.getGreen() > 210 && col.getBlue() > 210) {
+						if(zone == "") {
 							BufferedImage a = img.getSubimage(254, 17, 230, 40);
 							zone = ts.doOCR(a);
 						}
-						presence = new DiscordRichPresence.Builder(vip ? "In a private server" : "In a public server");
+						int trains = 0;
+						for(int y = 454; y < 1033; y++) {
+							Color check = new Color(img.getRGB(1737, y));
+							if(((check.getRed() < 50 && check.getGreen() > 50) || (check.getRed() > 50 && check.getRed() < 50)) && check.getBlue() < 50) {
+								System.out.println(check.getRed() + "|" + check.getGreen() + "|" + check.getBlue());
+								trains++;
+								y += 39;
+							}
+						}
+						presence = new DiscordRichPresence.Builder(trains + " train" + (trains == 1 ? "" : "s") + " in this zone.");
 						if(zone.contains("Supervisor")) {
 							presence.setDetails("Idling in the supervisor desk");
 						} else if(!zone.contains("Zone") && !zone.contains("Supervisor")) {
@@ -388,6 +405,23 @@ public class App {
 						presence.setSmallImage("sg", "Signalling");
 						DiscordRPC.discordUpdatePresence(presence.build());
 					} else {
+						Color checkCol = new Color(img.getRGB(818, 84));
+						if(checkCol.getBlue() > 160 && checkCol.getGreen() > 120 && checkCol.getRed() < 50) {
+							BufferedImage camtxt = img.getSubimage(906, 95, 105, 28);
+							String cam = ts.doOCR(camtxt);
+							presence = new DiscordRichPresence.Builder("Viewing " + cam);
+							if(zone.contains("Supervisor")) {
+								presence.setDetails("Idling in the supervisor desk");
+							} else if(!zone.contains("Zone") && !zone.contains("Supervisor")) {
+								presence.setDetails("Checking the trains list");
+							} else {
+								presence.setDetails("Signalling in " + zone);
+							}
+							presence.setStartTimestamps(start);
+							presence.setBigImage("scrlogo", "SCR 1.10.13");
+							presence.setSmallImage("sg", "Signalling");						
+							DiscordRPC.discordUpdatePresence(presence.build());
+						} else {
 						zone = "";
 						presence = new DiscordRichPresence.Builder(vip ? "In a private server" : "In a public server");
 						presence.setDetails("Idling in the signaller role");
@@ -395,6 +429,7 @@ public class App {
 						presence.setBigImage("scrlogo", "SCR 1.10.13");
 						presence.setSmallImage("sg", "Signalling");						
 						DiscordRPC.discordUpdatePresence(presence.build());
+						}
 					}
 				} else {
 					presence = new DiscordRichPresence.Builder(vip ? "In a private server" : "In a public server");
@@ -411,9 +446,8 @@ public class App {
 	}
 	public static String shortify(String s) {
 		s = s.replaceAll("\\n","");
-		if(s.equals("Leighton Stepford Road")) return "Leighton S. Road";
+		if(s.equals("Leighton Stepford Road")) return "Leighton Step Rd";
 		if(s.equals("Millcastle Racecourse")) return "Mill. Racecourse";
-		if(s.equals("Llyn-by-the-sea")) return "Llyn";
 		if(s.equals("Stepford United Football")) return "Stepford UFC";
 		if(s.equals("Cambridge Street...")) return "Cambridge Street Pkw";
 		return s;
@@ -424,7 +458,7 @@ public class App {
 		return s;
 	}
 	
-	public static String parseHeadcode(String h) {
+	public static String parseHeadcode(String h, Operators c) {
 		char prefix = h.charAt(0);
 		char dest;
 		switch(h.charAt(1)) {
@@ -432,10 +466,22 @@ public class App {
 				dest = 'I';
 				break;
 			case '4':
-				dest = 'J';
+				dest = c == Operators.WATERLINE ? 'J' : 'A';
+				break;
+			case '5':
+				dest = 'S';
+				break;
+			case '8':
+				dest = 'S';
 				break;
 			case '0':
 				dest = 'O';
+				break;
+			case '6':
+				dest = 'G';
+				break;
+			case '7':
+				dest = 'T';
 				break;
 			default:
 				dest = h.charAt(1);
