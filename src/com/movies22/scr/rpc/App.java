@@ -28,6 +28,7 @@ public class App {
 	private static Color SPAWN = new Color(0, 170, 255);
 	private static Color WHITE = new Color(255, 255, 255);
 	private static Color SG = new Color(237, 228, 228);
+	private static Color ROBLOX = new Color(254, 254, 254);
 	private static long start = System.currentTimeMillis();
 	public static void main(String[] args) throws Exception {
 		DiscordEventHandlers handlers = new DiscordEventHandlers.Builder().setReadyEventHandler((user) -> {
@@ -65,8 +66,24 @@ public class App {
 		String zone = "";
 		String currentStop = "";
 		String plats = "";
+		String currentDest = "";
+		String currentHeadcode = "";
+		String selRank = "";
+		long lastCheck = 0L;
+		long message = 0;
 		while(true) {
+			message = (System.currentTimeMillis() - start) % 10000;
 			img = robot.createScreenCapture(screen);
+			if(img.getRGB(27, 11) != ROBLOX.getRGB() && img.getRGB(27, 11) != WHITE.getRGB()) {
+				if(lastCheck == 0L) lastCheck = System.currentTimeMillis();
+				System.out.println("User isn't playing roblox anymore. Quitting in " + (15-Math.ceil((System.currentTimeMillis() - lastCheck)/100)/10) + " seconds.");
+				if((System.currentTimeMillis() - lastCheck) > 15000) {
+					System.out.println("User isn't playing roblox anymore. Quitting...");
+					System.exit(1);
+				}
+			} else {
+				lastCheck = 0L;
+			}
 			if(img.getRGB(995, 947) == LOAD.getRGB()) {
 				status = validate(CurrentWindow.LOADING, status);
 			} else if(img.getRGB(158, 436) == MAIN_MENU.getRGB()) {
@@ -79,15 +96,42 @@ public class App {
 				status = validate(CurrentWindow.GUARDING, status);
 			} else if(img.getRGB(1240, 1028) == WHITE.getRGB()) {
 				status = validate(CurrentWindow.DRIVING, status);
-			} else if(img.getRGB(1748, 649) == WHITE.getRGB()) {
-				status = validate(CurrentWindow.GUARDING_ONDUTY, status);
 			} else if(img.getRGB(838, 40) == SG.getRGB()) {
 				status = validate(CurrentWindow.SIGNALLING, status);
 			} else if(img.getRGB(862, 303) == QD.getRGB()) {
 				status = validate(CurrentWindow.SPAWN_MENU, status);
-			} else if(img.getRGB(396, 1008) == SPAWN.getRGB()) {
+				curOperator = null;
+			} else if(img.getRGB(396, 1008) == SPAWN.getRGB() && (curOperator == null || curOperator == Operators.UNKNOWN)) {
 				status = validate(CurrentWindow.SPAWN_MENU, status);
 			}
+			if(status == CurrentWindow.SPAWN_MENU && img.getRGB(24, 1008) == MAIN_MENU.getRGB()) {
+				if(img.getRGB(789, 248) == SPAWN.getRGB()) {
+					selRank = "Passenger";
+				} else if(img.getRGB(1108, 248) == SPAWN.getRGB()) {
+					selRank = "Driver";
+				} else if(img.getRGB(1428, 248) == SPAWN.getRGB()) {
+					selRank = "Dispatcher";
+				} else if(img.getRGB(789, 567) == SPAWN.getRGB()) {
+					selRank = "Guard";
+				} else if(img.getRGB(1108, 567) == SPAWN.getRGB()) {
+					selRank = "Signaller";
+				} else if(img.getRGB(1428, 567) == SPAWN.getRGB()) {
+					selRank = "Staff";
+				}
+			} else if(status == CurrentWindow.SPAWN_MENU) {
+				switch(selRank) {
+					case "Passenger":
+						status = validate(CurrentWindow.EXPLORING, status);
+						break;
+					case "Signaller":
+						status = validate(CurrentWindow.SIGNALLING, status);
+						break;
+					case "Staff":
+						status = validate(CurrentWindow.SUPERVISOR, status);
+						break;
+				}
+			}
+
 			if(img.getRGB(1877, 9) == VIP.getRGB()) {
 				vip = true;
 			}
@@ -108,8 +152,6 @@ public class App {
 						currentStop = ts.doOCR(curimg).replaceAll("\\n", "");
 						i = 845;
 					}
-				}
-				if(curimg != null) {
 				}
 			}
 			
@@ -143,10 +185,21 @@ public class App {
 							Color check = new Color(img.getRGB(1069, 1040));
 							if(check.getRed() > 200 && check.getGreen() > 120 && check.getBlue() < 40) {
 								loading = true;
-								BufferedImage a = img.getSubimage(665, 1021, 245, 30);
-								curStop = ts.doOCR(a);
-								presence = new DiscordRichPresence.Builder("Loading at " + shortify(curStop));
-								lastStop = curStop;
+								if(message < 5000) {
+									BufferedImage a = img.getSubimage(665, 1021, 245, 30);
+									curStop = ts.doOCR(a);
+									presence = new DiscordRichPresence.Builder("Loading at " + shortify(curStop));
+									lastStop = curStop;
+								} else {
+									BufferedImage a = img.getSubimage(852, 1055, 30, 18);
+									curStop = ts.doOCR(a);
+									if(curStop.contains("00")) curStop = "00";
+									int z = Integer.parseInt(curStop.replaceAll("\\+", "").replaceAll("\\n", ""));
+									if(z < 1) curStop = "on time";
+									else curStop = z + " min" + (z > 1 ? "s" : "") + " late";
+									presence = new DiscordRichPresence.Builder("Service running " + shortify(curStop));
+									lastStop = curStop;
+								}
 							} else {
 								if(loading) {
 									loading = false;
@@ -154,6 +207,11 @@ public class App {
 									Thread.sleep(1000);
 								}
 								BufferedImage c;
+								BufferedImage y = img.getSubimage(769, 1004, 45, 17);
+								String h = ts.doOCR(y);
+								if(h == "") continue;
+								currentHeadcode = parseHeadcode(h);
+								if(message < 5000) {
 								BufferedImage a = img.getSubimage(665, 1021, 245, 30);
 								curStop2 = ts.doOCR(a);
 									if(curStopA.equals("") || !curStop2.equals(curStop)) {
@@ -162,8 +220,98 @@ public class App {
 									}
 									curStop = curStop2;
 									presence = new DiscordRichPresence.Builder("NS: " + shortify(curStop) + " @ " + curStopA);
+								} else {
+									if(h.toLowerCase() == currentHeadcode) {
+										presence = new DiscordRichPresence.Builder("Service to " + shortify(currentDest));
+									} else {
+									switch(currentHeadcode.toLowerCase().charAt(1)) {
+										case 'a':
+											currentDest = "Airport Central";
+											break;
+										case 'b':
+											currentDest = "Benton";
+											break;
+										case 'c':
+											currentDest = "Beechley";
+											break;
+										case 'd':
+											currentDest = "Willowfield";
+											break;
+										case 'e':
+											currentDest = "Edgemead";
+											break;
+										case 'f':
+											currentDest = "Whitefield";
+											break;
+										case 'g':
+											currentDest = "Greenfield";
+											break;
+										case 'h':
+											currentDest = "Newry Harbour";
+											break;
+										case 'i':
+											currentDest = "St Helens Bridge";
+											break;
+										case 'j':
+											currentDest = "Farleigh";
+											break;
+										case 'k':
+											currentDest = "Leighton West";
+											break;
+										case 'l':
+											currentDest = "Llyn-by-the-sea";
+											break;
+										case 'm':
+											currentDest = "Morganstown";
+											break;
+										case 'n':
+											currentDest = "Newry";
+											break;
+										case 'o':
+											currentDest = "Connolly";
+											break;
+										case 'p':
+											currentDest = curOperator == Operators.AIRLINK ? "Airport Parkway" : "Port Benton";
+											break;
+										case 'q':
+											currentDest = "Esterfield";
+											break;
+										case 'r':
+											currentDest = "Leighton Stepford Road";
+											break;
+										case 's':
+											currentDest = "Stepford Central";
+											break;
+										case 't':
+											currentDest = "Leighton City";
+											break;
+										case 'u':
+											currentDest = "Stepford UFC";
+											break;
+										case 'v':
+											currentDest = "Stepford Victoria";
+											break;
+										case 'w':
+											currentDest = "Westwyvern";
+											break;
+										case 'x':
+											currentDest = "Terminal 2";
+											break;
+										case 'y':
+											currentDest = "Berrily";
+											break;
+										case 'z':
+											currentDest = "Terminal 3";
+											break;
+										default:
+											currentDest = "Unknown";
+											break;
+									}
+									presence = new DiscordRichPresence.Builder("Service to " + shortify(currentDest));
+								}
+								}
 							}
-							presence.setDetails("Driving a" + ((curOperator == Operators.AIRLINK || curOperator == Operators.EXPRESS) ? "n " : " ") + curOperator.toString().toLowerCase() + " service.");
+							presence.setDetails("Driving a" + ((curOperator == Operators.AIRLINK || curOperator == Operators.EXPRESS) ? "n " : " ") + curOperator.toString().toLowerCase() + " service as " + currentHeadcode.toUpperCase());
 							
 						} else {
 							presence = new DiscordRichPresence.Builder("Selecting a depot");
@@ -200,6 +348,7 @@ public class App {
 							BufferedImage c = img.getSubimage(1745, 455, 175, 23);
 							user = ts.doOCR(c);
 						}
+						if(rank.contains("Guard Manager")) rank = "GM";
 						if(rank.contains("Senior Guard")) rank = "SGD";
 						if(rank.contains("Senior Dispatcher")) rank = "SDS";
 						if(rank.contains("Guard")) rank = "GD";
@@ -209,7 +358,7 @@ public class App {
 							rank = rank.split("\\[").length > 1 ? rank.split("\\[")[1] : rank;
 							rank.replaceAll("6", "G");
 						}
-						presence = new DiscordRichPresence.Builder("Next stop: " + shortify(t));
+						presence = new DiscordRichPresence.Builder("NS: " + shortify(t));
 						presence.setDetails("Guarding [" + rank + "] " + user);
 					} else {
 						rank = "";
@@ -229,6 +378,8 @@ public class App {
 						presence = new DiscordRichPresence.Builder(vip ? "In a private server" : "In a public server");
 						if(zone.contains("Supervisor")) {
 							presence.setDetails("Idling in the supervisor desk");
+						} else if(!zone.contains("Zone") && !zone.contains("Supervisor")) {
+							presence.setDetails("Checking the trains list");
 						} else {
 							presence.setDetails("Signalling in " + zone);
 						}
@@ -271,6 +422,44 @@ public class App {
 		s = s.replaceAll("\\n","");
 		if(s.equals("Stepford United Football Club")) return "Stepford UFC";
 		return s;
+	}
+	
+	public static String parseHeadcode(String h) {
+		char prefix = h.charAt(0);
+		char dest;
+		switch(h.charAt(1)) {
+			case '1':
+				dest = 'I';
+				break;
+			case '4':
+				dest = 'J';
+				break;
+			case '0':
+				dest = 'O';
+				break;
+			default:
+				dest = h.charAt(1);
+				break;
+		}
+		char number1 = h.charAt(2);
+		char number2 = h.length() > 3 ? h.charAt(3) : h.charAt(2);
+		switch(number1) {
+			case 'o':
+				number1 = '0';
+				break;
+			case 'O':
+				number1 = '0';
+				break;
+		}
+		switch(number2) {
+		case 'o':
+			number2 = '0';
+			break;
+		case 'O':
+			number2 = '0';
+			break;
+	}
+		return ""+prefix + dest + number1 + number2;
 	}
 	public static CurrentWindow validate(CurrentWindow b, CurrentWindow a) {
 		if(a == null) return b;

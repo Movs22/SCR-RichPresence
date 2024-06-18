@@ -8,8 +8,9 @@ public enum CurrentWindow {
 	DRIVING(3, "Driving "),
 	DISPATCHING(3, "Dispatching at "),
 	GUARDING(3, "Guarding "),
-	GUARDING_ONDUTY(4, "Guarding "),
 	SIGNALLING(3, "Signalling "),
+	EXPLORING(3, "Exploring the map"),
+	SUPERVISOR(3, "Idling in a staff role"),
 	UNKNOWN(-1, "Unknown");
 	public int v;
 	public String t;
