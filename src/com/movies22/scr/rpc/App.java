@@ -1,22 +1,38 @@
 package com.movies22.scr.rpc;
 
+import java.awt.AWTException;
 import java.awt.Color;
-import java.awt.FlowLayout;
 import java.awt.Rectangle;
 import java.awt.Robot;
+import java.awt.Toolkit;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 
 import net.arikia.dev.drpc.DiscordEventHandlers;
 import net.arikia.dev.drpc.DiscordRPC;
 import net.arikia.dev.drpc.DiscordRichPresence;
 import net.sourceforge.tess4j.Tesseract;
+import net.sourceforge.tess4j.TesseractException;
+
+import static javax.swing.JOptionPane.showMessageDialog;
 
 public class App {
 	private static Tesseract ts;
+	private static Tesseract ts2;
 	private static Robot robot;
 	private static CurrentWindow status;
 	private static Color LOAD = new Color(51, 51, 51);
@@ -27,10 +43,11 @@ public class App {
 	private static Color VIP = new Color(127, 85, 0);
 	private static Color SPAWN = new Color(0, 170, 255);
 	private static Color WHITE = new Color(255, 255, 255);
-	private static Color SG = new Color(232, 228, 228);
 	private static Color ROBLOX = new Color(254, 254, 254);
 	private static long start = System.currentTimeMillis();
-	public static void main(String[] args) throws Exception {
+	private static String version = "Beta-0.1";
+	private static Boolean update = false;
+	public static void main(String[] args) throws InterruptedException {
 		DiscordEventHandlers handlers = new DiscordEventHandlers.Builder().setReadyEventHandler((user) -> {
             System.out.println("Welcome " + user.username + "#" + user.discriminator + ".");
             DiscordRichPresence.Builder presence = new DiscordRichPresence.Builder("Score: ");
@@ -38,22 +55,114 @@ public class App {
             presence.setStartTimestamps(start);
             DiscordRPC.discordUpdatePresence(presence.build());
         }).build();
+		
         DiscordRPC.discordInitialize("1227325093781311663", handlers, false);
         DiscordRPC.discordRegister("1227325093781311663", "");
+        System.out.println("Starting SCR-RichPresence version " + version);
 		System.out.println("Fetching menu...");
 		ts = new Tesseract();
+		ts2 = new Tesseract();
 		ts.setTessVariable("tessedit_char_whitelist", "0123456789:+-. _[]ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
-		//ts.setTessVariable("textord_old_xheight ", "true");
-		//ts.setTessVariable("textord_min_xheight", "10");
-		//ts.setTessVariable("textord_max_noise_size", "10");
-		ts.setTessVariable("max_permuter_attempts", "750");
-		ts.setDatapath("./");
+		ts.setTessVariable("max_permuter_attempts", "500");
+		ts2.setTessVariable("tessedit_char_whitelist", "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+		ts2.setTessVariable("max_permuter_attempts", "750");
+		Path data = Paths.get(".SCR-RichPresence").toAbsolutePath();
+		Path engdata = Paths.get(".SCR-RichPresence/eng.traineddata").toAbsolutePath();
+		Path engdata2 = Paths.get(".SCR-RichPresence/headcodes.traineddata").toAbsolutePath();
+		Path versdata = Paths.get(".SCR-RichPresence/version.txt").toAbsolutePath();
+		if(Files.notExists(versdata)) {
+			try {
+				FileWriter a = new FileWriter(versdata.toString());
+				a.write(version);
+				a.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				showMessageDialog(null, e.getClass() + ": " + e.getCause() + "\n" + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+				Toolkit.getDefaultToolkit().beep();
+				System.out.println("Failed to create data folder");
+				Thread.sleep(5000);
+				System.exit(1);
+				return;
+			}
+		} else {
+			try {
+				if(!version.equals(Files.readString(versdata))) {
+					update = true;
+					System.out.println("The data folder is on an older version. Copying engine data...");
+					FileWriter a = new FileWriter(versdata.toString());
+					a.write(version);
+					a.close();
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		if(Files.notExists(engdata) || update) {
+			InputStream tessdata = App.class.getResourceAsStream("tessdata/eng.traineddata");
+			try {
+				Files.copy(tessdata, engdata, StandardCopyOption.REPLACE_EXISTING);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				showMessageDialog(null, e.getClass() + ": " + e.getCause() + "\n" + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+				Toolkit.getDefaultToolkit().beep();
+				System.out.println("Failed to copy OCR data. Please contact @Movies22");
+				Thread.sleep(5000);
+				System.exit(1);
+				return;
+			}
+		}
+		if(Files.notExists(engdata2) || update) {
+			InputStream tessdata = App.class.getResourceAsStream("tessdata/headcodes.traineddata");
+			try {
+				Files.copy(tessdata, engdata2, StandardCopyOption.REPLACE_EXISTING);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				showMessageDialog(null, e.getClass() + ": " + e.getCause() + "\n" + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+				Toolkit.getDefaultToolkit().beep();
+				System.out.println("Failed to copy OCR data. Please contact @Movies22");
+				Thread.sleep(5000);
+				System.exit(1);
+				return;
+			}
+		}
+		ts.setDatapath(".SCR-RichPresence");
+		ts2.setDatapath(".SCR-RichPresence");
+		//ts2.setLanguage("headcodes"); //model isn't finalized yet.
 		Rectangle screen = new Rectangle(0, 0, 1920, 1080);
-		robot = new Robot();
+		try {
+			robot = new Robot();
+		} catch (AWTException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			showMessageDialog(null, e.getClass() + ": " + e.getCause() + "\n" + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			Toolkit.getDefaultToolkit().beep();
+			Thread.sleep(5000);
+			System.exit(1);
+			return;
+		}
 		BufferedImage img;
+		img = robot.createScreenCapture(screen);
+
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
+				| UnsupportedLookAndFeelException e) {
+			e.printStackTrace();
+		}
+		
+		if(img.getRGB(27, 11) != ROBLOX.getRGB() && img.getRGB(27, 11) != WHITE.getRGB()) {
+			showMessageDialog(null, "Couldn't find a roblox instance in the main monitor. \nPlease make sure that it's in fullscreen, that you're in a roblox game and that it's in a 1920x1080 screen. \nIf this error keeps occuring, please contact @Movies22", "Alert", JOptionPane.ERROR_MESSAGE);
+			Toolkit.getDefaultToolkit().beep();
+			System.exit(1);
+			return;
+		}
 		System.out.println("Main menu has loaded!");
 		Operators curOperator = Operators.UNKNOWN;
-		Operators curOperator2;
+		Operators curOperator2 = Operators.UNKNOWN;
 		Boolean driving = false;
 		Boolean vip = false;
 		Boolean loading = false;
@@ -88,6 +197,7 @@ public class App {
 			if(img.getRGB(995, 947) == LOAD.getRGB()) {
 				status = validate(CurrentWindow.LOADING, status);
 			} else if(img.getRGB(158, 436) == MAIN_MENU.getRGB()) {
+				selRank = null;
 				status = validate(CurrentWindow.MAIN_MENU, status);
 			} else if(img.getRGB(543, 1023) == WHITE.getRGB()) {
 				status = validate(CurrentWindow.DRIVING, status);
@@ -97,12 +207,12 @@ public class App {
 				status = validate(CurrentWindow.GUARDING, status);
 			} else if(img.getRGB(1240, 1028) == WHITE.getRGB()) {
 				status = validate(CurrentWindow.DRIVING, status);
-			} else if(sgcol.getRed() > 220 && sgcol.getGreen() > 210 && sgcol.getBlue() > 210) {
+			} /*else if(sgcol.getRed() > 220 && sgcol.getGreen() > 210 && sgcol.getBlue() > 210 && status == CurrentWindow.SPAWN_MENU) {
 				status = validate(CurrentWindow.SIGNALLING, status);
-			} else if(img.getRGB(862, 303) == QD.getRGB()) {
+			}*/ else if(img.getRGB(862, 303) == QD.getRGB()) {
 				status = validate(CurrentWindow.SPAWN_MENU, status);
-				curOperator = null;
-			} else if(img.getRGB(396, 1008) == SPAWN.getRGB() && (curOperator == null || curOperator == Operators.UNKNOWN)) {
+				curOperator = Operators.UNKNOWN;
+			} else if(img.getRGB(396, 1008) == SPAWN.getRGB() && (curOperator == null || curOperator == Operators.UNKNOWN) && selRank == null) {
 				status = validate(CurrentWindow.SPAWN_MENU, status);
 			}
 			if(status == CurrentWindow.SPAWN_MENU && img.getRGB(24, 1008) == MAIN_MENU.getRGB()) {
@@ -119,7 +229,7 @@ public class App {
 				} else if(img.getRGB(1428, 567) == SPAWN.getRGB()) {
 					selRank = "Staff";
 				}
-			} else if(status == CurrentWindow.SPAWN_MENU) {
+			} else if(status == CurrentWindow.SPAWN_MENU && selRank != null) {
 				switch(selRank) {
 					case "Passenger":
 						status = validate(CurrentWindow.EXPLORING, status);
@@ -136,6 +246,7 @@ public class App {
 			if(img.getRGB(1877, 9) == VIP.getRGB()) {
 				vip = true;
 			}
+			try {
 			if(status == CurrentWindow.SPAWN_MENU && img.getRGB(743, 1008) == GREY1.getRGB()) {
 				BufferedImage stationimg = img.getSubimage(30, 134, 335, 845);
 				BufferedImage curimg = null;
@@ -187,13 +298,13 @@ public class App {
 							if(check.getRed() > 200 && check.getGreen() > 120 && check.getBlue() < 40) {
 								loading = true;
 								BufferedImage y = img.getSubimage(770, 1005, 40, 17);
-								String h = ts.doOCR(y);
+								String h = ts2.doOCR(y);
 								if(h == "") continue;
 								if(h.length() < 4) h = currentHeadcode;
 								currentHeadcode = parseHeadcode(h, curOperator);
 								if(message < 5000) {
 									BufferedImage a = img.getSubimage(665, 1021, 245, 30);
-									curStop = ts.doOCR(a);
+										curStop = ts.doOCR(a);
 									presence = new DiscordRichPresence.Builder("Loading at " + shortify(curStop));
 									lastStop = curStop;
 								} else {
@@ -213,8 +324,8 @@ public class App {
 									Thread.sleep(1000);
 								}
 								BufferedImage c;
-								BufferedImage y = img.getSubimage(770, 1005, 40, 17);
-								String h = ts.doOCR(y);
+								BufferedImage y = img.getSubimage(770, 1003, 40, 24);
+								String h = ts2.doOCR(y);
 								if(h == "") continue;
 								if(h.length() < 4) h = currentHeadcode;
 								currentHeadcode = parseHeadcode(h, curOperator);
@@ -335,7 +446,7 @@ public class App {
 					if((col.getRed() < 100) && (col.getGreen() > 160) && (col.getBlue() > 160)) {
 						BufferedImage headcode = img.getSubimage(1798, 476, 65, 30);
 						BufferedImage plat = img.getSubimage(1755, 434, 144, 30);
-						presence = new DiscordRichPresence.Builder("Dispatching " + ts.doOCR(headcode).replaceAll("\\n", "").toUpperCase() + " at " + ts.doOCR(plat).replaceAll("\\n", ""));
+						presence = new DiscordRichPresence.Builder("Dispatching " + ts2.doOCR(headcode).replaceAll("\\n", "").toUpperCase() + " at " + ts.doOCR(plat).replaceAll("\\n", ""));
 					} else {
 						presence = new DiscordRichPresence.Builder(vip ? "In a private server" : "In a public server");
 					}
@@ -441,7 +552,16 @@ public class App {
 					driving = false;
 				}
 			}
-			Thread.sleep(250);
+			 Thread.sleep(250);
+			} catch (NullPointerException | TesseractException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				showMessageDialog(null, e.getClass() + ": " + e.getCause() + "\n" + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+				Toolkit.getDefaultToolkit().beep();
+				Thread.sleep(5000);
+				System.exit(1);
+				return;
+			}
 		}
 	}
 	public static String shortify(String s) {
@@ -509,7 +629,6 @@ public class App {
 	}
 	public static CurrentWindow validate(CurrentWindow b, CurrentWindow a) {
 		if(a == null) return b;
-		if(b.v == a.v) return b;
 		if(b.v > a.v) return b;
 		if(b.v == (a.v - 1)) return b;
 		if(b.v == 1) return b;
