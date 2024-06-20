@@ -65,14 +65,17 @@ public class App {
 		ts.setTessVariable("tessedit_char_whitelist", "0123456789:+-. _[]ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
 		ts.setTessVariable("max_permuter_attempts", "500");
 		ts2.setTessVariable("tessedit_char_whitelist", "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-		ts2.setTessVariable("max_permuter_attempts", "750");
+		ts2.setTessVariable("max_permuter_attempts", "500");
+		//ts2.setTessVariable("lstm_choice_mode", "2");
 		Path data = Paths.get(".SCR-RichPresence").toAbsolutePath();
 		Path engdata = Paths.get(".SCR-RichPresence/eng.traineddata").toAbsolutePath();
 		Path engdata2 = Paths.get(".SCR-RichPresence/headcodes.traineddata").toAbsolutePath();
 		Path versdata = Paths.get(".SCR-RichPresence/version.txt").toAbsolutePath();
 		if(Files.notExists(versdata)) {
 			try {
-				FileWriter a = new FileWriter(versdata.toString());
+				new File(data.toString()).mkdirs();
+				File file = new File(versdata.toString());
+				FileWriter a = new FileWriter(file);
 				a.write(version);
 				a.close();
 			} catch (IOException e) {
@@ -288,6 +291,8 @@ public class App {
 						presence = new DiscordRichPresence.Builder(vip ? "In a private server" : "In a public server");
 						presence.setDetails("Selecting a route");
 						presence.setStartTimestamps(start);
+						currentHeadcode = "";
+						currentDest = "";
 						presence.setBigImage("scrlogo", "SCR 1.10.13");
 						//presence.setSmallImage("logo", curOperator.name);
 						DiscordRPC.discordUpdatePresence(presence.build());
@@ -297,11 +302,6 @@ public class App {
 							Color check = new Color(img.getRGB(1069, 1040));
 							if(check.getRed() > 200 && check.getGreen() > 120 && check.getBlue() < 40) {
 								loading = true;
-								BufferedImage y = img.getSubimage(770, 1005, 40, 17);
-								String h = ts2.doOCR(y);
-								if(h == "") continue;
-								if(h.length() < 4) h = currentHeadcode;
-								currentHeadcode = parseHeadcode(h, curOperator);
 								if(message < 5000) {
 									BufferedImage a = img.getSubimage(665, 1021, 245, 30);
 										curStop = ts.doOCR(a);
@@ -321,14 +321,17 @@ public class App {
 								if(loading) {
 									loading = false;
 									curStopA = "";
+									currentHeadcode = "";
 									Thread.sleep(1000);
 								}
 								BufferedImage c;
-								BufferedImage y = img.getSubimage(770, 1003, 40, 24);
-								String h = ts2.doOCR(y);
-								if(h == "") continue;
-								if(h.length() < 4) h = currentHeadcode;
-								currentHeadcode = parseHeadcode(h, curOperator);
+								BufferedImage y = img.getSubimage(770, 1003, 42, 19);
+								if(currentHeadcode == "") {
+									String h = ts2.doOCR(Utils.resize(y, 42*2, 19*2));
+									if(h == "") continue;
+									if(h.length() < 4) h = currentHeadcode;
+									currentHeadcode = parseHeadcode(h, curOperator);
+								}
 								if(message < 5000) {
 								BufferedImage a = img.getSubimage(665, 1021, 245, 30);
 								curStop2 = ts.doOCR(a);
@@ -339,9 +342,6 @@ public class App {
 									curStop = curStop2;
 									presence = new DiscordRichPresence.Builder("NS: " + shortify(curStop) + " @ " + curStopA);
 								} else {
-									if(h.toLowerCase() == currentHeadcode) {
-										presence = new DiscordRichPresence.Builder("Service to " + shortify(currentDest));
-									} else {
 									switch(currentHeadcode.toLowerCase().charAt(1)) {
 										case 'a':
 											currentDest = "Airport Central";
@@ -426,7 +426,6 @@ public class App {
 											break;
 									}
 									presence = new DiscordRichPresence.Builder("Service to " + shortify(currentDest));
-								}
 								}
 							}
 							presence.setDetails("Driving a" + ((curOperator == Operators.AIRLINK || curOperator == Operators.EXPRESS) ? "n " : " ") + curOperator.toString().toLowerCase() + " service as " + currentHeadcode.toUpperCase());

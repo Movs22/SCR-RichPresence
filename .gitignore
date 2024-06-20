@@ -30,3 +30,4 @@ bin/
 *.jar
 *.jar
 SCR-RichPresence.jar
+/.SCR-RichPresence
