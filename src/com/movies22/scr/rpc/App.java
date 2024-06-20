@@ -68,9 +68,9 @@ public class App {
 		ts = new Tesseract();
 		ts2 = new Tesseract();
 		ts.setTessVariable("tessedit_char_whitelist", "0123456789:+-. _[]ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
-		ts.setTessVariable("max_permuter_attempts", "500");
-		ts2.setTessVariable("tessedit_char_whitelist", "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ");
-		ts2.setTessVariable("max_permuter_attempts", "500");
+		ts.setTessVariable("max_permuter_attempts", "750");
+		ts2.setTessVariable("tessedit_char_whitelist", "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZØ ");
+		ts2.setTessVariable("max_permuter_attempts", "750");
 		Path data = Paths.get(".SCR-RichPresence").toAbsolutePath();
 		Path engdata = Paths.get(".SCR-RichPresence/eng.traineddata").toAbsolutePath();
 		Path versdata = Paths.get(".SCR-RichPresence/version.txt").toAbsolutePath();
@@ -274,6 +274,16 @@ public class App {
 						if(img.getRGB(1078, 1017) == WHITE.getRGB()) {
 							if(lastStop != curStop) loading = false;
 							Color check = new Color(img.getRGB(1069, 1040));
+							BufferedImage y = img.getSubimage(767, 1003, 46, 19);
+							String h = ts2.doOCR(Utils.resize(y, 46*2, 19*2)).replaceAll("[^A-Z\\d]", "");
+							if(h.length() < 4) h = currentHeadcode;
+							if(h == "") continue;
+							try {
+								Integer.parseInt(h.substring(0, 1));
+							} catch(Exception e) {
+								continue;
+							}
+							currentHeadcode = parseHeadcode(h, curOperator);
 							if(check.getRed() > 200 && check.getGreen() > 120 && check.getBlue() < 40) {
 								loading = true;
 								if(message < 5000) {
@@ -285,27 +295,23 @@ public class App {
 									BufferedImage a = img.getSubimage(852, 1055, 30, 18);
 									curStop = ts.doOCR(a);
 									if(curStop.contains("00")) curStop = "00";
-									int z = Integer.parseInt(curStop.replaceAll("\\+", "").replaceAll("\\n", ""));
-									if(z < 1) curStop = "on time";
-									else curStop = z + " min" + (z > 1 ? "s" : "") + " late";
-									presence = new DiscordRichPresence.Builder("Service running " + shortify(curStop));
-									lastStop = curStop;
+									try {
+										int z = Integer.parseInt(curStop.replaceAll("\\+", "").replaceAll("\\n", ""));
+										if(z < 1) curStop = "on time";
+										else curStop = z + " min" + (z > 1 ? "s" : "") + " late";
+										presence = new DiscordRichPresence.Builder("Service running " + shortify(curStop));
+										lastStop = curStop;
+									} catch(Exception e) {
+										continue;
+									}
 								}
 							} else {
 								if(loading) {
 									loading = false;
 									curStopA = "";
-									currentHeadcode = "";
 									Thread.sleep(1000);
 								}
 								BufferedImage c;
-								BufferedImage y = img.getSubimage(770, 1003, 42, 19);
-								if(currentHeadcode == "") {
-									String h = ts2.doOCR(Utils.resize(y, 42*2, 19*2));
-									if(h.length() < 4) h = currentHeadcode;
-									if(h == "") continue;
-									currentHeadcode = parseHeadcode(h, curOperator);
-								}
 								if(message < 5000) {
 								BufferedImage a = img.getSubimage(665, 1021, 245, 30);
 								curStop2 = ts.doOCR(a);
@@ -464,15 +470,12 @@ public class App {
 				} else if(status == CurrentWindow.SIGNALLING) {
 					Color col = new Color(img.getRGB(838, 40));
 					if(col.getRed() > 220 && col.getGreen() > 210 && col.getBlue() > 210) {
-						if(zone == "") {
-							BufferedImage a = img.getSubimage(254, 17, 230, 40);
-							zone = ts.doOCR(a);
-						}
+						BufferedImage a = img.getSubimage(254, 17, 230, 40);
+						zone = ts.doOCR(a);
 						int trains = 0;
 						for(int y = 454; y < 1033; y++) {
 							Color check = new Color(img.getRGB(1737, y));
-							if(((check.getRed() < 50 && check.getGreen() > 50) || (check.getRed() > 50 && check.getRed() < 50)) && check.getBlue() < 50) {
-								System.out.println(check.getRed() + "|" + check.getGreen() + "|" + check.getBlue());
+							if(((check.getRed() < 50 && check.getGreen() > 50) || (check.getRed() > 50 && check.getGreen() > 60) || (check.getRed() > 50 && check.getGreen() < 50)) && check.getBlue() < 50) {
 								trains++;
 								y += 39;
 							}
@@ -491,9 +494,9 @@ public class App {
 						DiscordRPC.discordUpdatePresence(presence.build());
 					} else {
 						Color checkCol = new Color(img.getRGB(818, 84));
-						if(checkCol.getBlue() > 160 && checkCol.getGreen() > 120 && checkCol.getRed() < 50) {
-							BufferedImage camtxt = img.getSubimage(906, 95, 105, 28);
-							String cam = ts.doOCR(camtxt);
+						if(checkCol.getBlue() > 160 && checkCol.getGreen() > 120 && checkCol.getRed() < 60) {
+							BufferedImage camtxt = img.getSubimage(906, 90, 115, 38);
+							String cam = ts2.doOCR(Utils.resize(camtxt, 115*2, 38*2));
 							presence = new DiscordRichPresence.Builder("Viewing " + cam);
 							if(zone.contains("Supervisor")) {
 								presence.setDetails("Idling in the supervisor desk");
