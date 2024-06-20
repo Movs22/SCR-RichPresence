@@ -8,6 +8,7 @@ public enum Operators {
 	CONNECT((new Color(0, 158, 225)), "Connect"),
 	EXPRESS((new Color(255, 0, 128)), "Express"),
 	WATERLINE((new Color(73, 95, 124)), "Waterline"),
+	SELECTING((new Color(154, 154, 154)), "%OPERATOR%"),
 	UNKNOWN((new Color(0, 0, 0)), "unknown");
 	public String operator;
 	public Color color;
@@ -17,11 +18,12 @@ public enum Operators {
 		this.name = n;
 	}
 	
-	public Operators getOperator(int col) {
+	public Operators getOperator(int col, Operators fallback) {
 		if(col == AIRLINK.color.getRGB()) return AIRLINK;
 		if(col == CONNECT.color.getRGB()) return CONNECT;
 		if(col == EXPRESS.color.getRGB()) return EXPRESS;
 		if(col == WATERLINE.color.getRGB()) return WATERLINE;
+		if(col == SELECTING.color.getRGB()) return fallback;
 		return UNKNOWN;
 	}
 }

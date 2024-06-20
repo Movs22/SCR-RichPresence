@@ -2,17 +2,18 @@ package com.movies22.scr.rpc;
 
 import java.awt.AWTException;
 import java.awt.Color;
+import java.awt.Image;
 import java.awt.Rectangle;
 import java.awt.Robot;
+import java.awt.SystemTray;
 import java.awt.Toolkit;
+import java.awt.TrayIcon;
+import java.awt.TrayIcon.MessageType;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -47,18 +48,22 @@ public class App {
 	private static long start = System.currentTimeMillis();
 	private static String version = "Beta-0.1";
 	private static Boolean update = false;
-	public static void main(String[] args) throws InterruptedException {
+
+	@SuppressWarnings("deprecation")
+	public static void main(String[] args) {
+		
+		
+		try {
 		DiscordEventHandlers handlers = new DiscordEventHandlers.Builder().setReadyEventHandler((user) -> {
             System.out.println("Welcome " + user.username + "#" + user.discriminator + ".");
-            DiscordRichPresence.Builder presence = new DiscordRichPresence.Builder("Score: ");
-            presence.setDetails("Running Test");
+            DiscordRichPresence.Builder presence = new DiscordRichPresence.Builder("Playing in a public server");
+            presence.setDetails("Loading status...");
             presence.setStartTimestamps(start);
             DiscordRPC.discordUpdatePresence(presence.build());
         }).build();
-		
-        DiscordRPC.discordInitialize("1227325093781311663", handlers, false);
-        DiscordRPC.discordRegister("1227325093781311663", "");
-        System.out.println("Starting SCR-RichPresence version " + version);
+		DiscordRPC.discordInitialize("1227325093781311663", handlers, false);
+		DiscordRPC.discordRegister("1227325093781311663", "");
+		System.out.println("Starting SCR-RichPresence version " + version);
 		System.out.println("Fetching menu...");
 		ts = new Tesseract();
 		ts2 = new Tesseract();
@@ -66,10 +71,8 @@ public class App {
 		ts.setTessVariable("max_permuter_attempts", "500");
 		ts2.setTessVariable("tessedit_char_whitelist", "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 		ts2.setTessVariable("max_permuter_attempts", "500");
-		//ts2.setTessVariable("lstm_choice_mode", "2");
 		Path data = Paths.get(".SCR-RichPresence").toAbsolutePath();
 		Path engdata = Paths.get(".SCR-RichPresence/eng.traineddata").toAbsolutePath();
-		Path engdata2 = Paths.get(".SCR-RichPresence/headcodes.traineddata").toAbsolutePath();
 		Path versdata = Paths.get(".SCR-RichPresence/version.txt").toAbsolutePath();
 		if(Files.notExists(versdata)) {
 			try {
@@ -117,21 +120,6 @@ public class App {
 				return;
 			}
 		}
-		if(Files.notExists(engdata2) || update) {
-			InputStream tessdata = App.class.getResourceAsStream("tessdata/headcodes.traineddata");
-			try {
-				Files.copy(tessdata, engdata2, StandardCopyOption.REPLACE_EXISTING);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				showMessageDialog(null, e.getClass() + ": " + e.getCause() + "\n" + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-				Toolkit.getDefaultToolkit().beep();
-				System.out.println("Failed to copy OCR data. Please contact @Movies22");
-				Thread.sleep(5000);
-				System.exit(1);
-				return;
-			}
-		}
 		ts.setDatapath(".SCR-RichPresence");
 		ts2.setDatapath(".SCR-RichPresence");
 		//ts2.setLanguage("headcodes"); //model isn't finalized yet.
@@ -166,8 +154,8 @@ public class App {
 		System.out.println("Main menu has loaded!");
 		Operators curOperator = Operators.UNKNOWN;
 		Operators curOperator2 = Operators.UNKNOWN;
-		Boolean driving = false;
 		Boolean vip = false;
+		Boolean warned = false;
 		Boolean loading = false;
 		String lastStop = null;
 		String curStop = "";
@@ -177,7 +165,6 @@ public class App {
 		String user = "";
 		String zone = "";
 		String currentStop = "";
-		String plats = "";
 		String currentDest = "";
 		String currentHeadcode = "";
 		String selRank = "";
@@ -196,7 +183,6 @@ public class App {
 			} else {
 				lastCheck = 0L;
 			}
-			Color sgcol = new Color(img.getRGB(838, 40));
 			if(img.getRGB(995, 947) == LOAD.getRGB()) {
 				status = validate(CurrentWindow.LOADING, status);
 			} else if(img.getRGB(158, 436) == MAIN_MENU.getRGB()) {
@@ -269,23 +255,11 @@ public class App {
 					}
 				}
 			}
-			
-			// TODO:
-			// add DS status
-			// optimizations
-			// rec video
-			
-			//TODO
-			//check for roblox logo
-			//if no roblox logo && if not scr, - stop program
-			
-			//add version check
-			
 			DiscordRPC.discordRunCallbacks();
 			if(status != null) {
 				DiscordRichPresence.Builder presence;
 				if(status == CurrentWindow.DRIVING) {
-					curOperator2 = curOperator.getOperator(img.getRGB(192, 60));
+					curOperator2 = curOperator.getOperator(img.getRGB(192, 60), curOperator);
 					if(curOperator2 != Operators.UNKNOWN) curOperator = curOperator2;
 					if(curOperator2 != Operators.UNKNOWN) {
 						presence = new DiscordRichPresence.Builder(vip ? "In a private server" : "In a public server");
@@ -328,8 +302,8 @@ public class App {
 								BufferedImage y = img.getSubimage(770, 1003, 42, 19);
 								if(currentHeadcode == "") {
 									String h = ts2.doOCR(Utils.resize(y, 42*2, 19*2));
-									if(h == "") continue;
 									if(h.length() < 4) h = currentHeadcode;
+									if(h == "") continue;
 									currentHeadcode = parseHeadcode(h, curOperator);
 								}
 								if(message < 5000) {
@@ -469,6 +443,7 @@ public class App {
 						if(rank.contains("Senior Guard")) rank = "SGD";
 						if(rank.contains("Senior Dispatcher")) rank = "SDS";
 						if(rank.contains("Guard")) rank = "GD";
+						if(rank.contains("Guest")) rank = "GUEST";
 						if(rank.contains("Dispatcher")) rank = "DS";
 						else {
 							rank = rank.split("\\]")[0];
@@ -548,8 +523,18 @@ public class App {
 					presence.setBigImage("scrlogo", "SCR 1.10.13");
 					DiscordRPC.discordUpdatePresence(presence.build());
 					curOperator = Operators.UNKNOWN;
-					driving = false;
 				}
+			} else {
+				if(!warned) {
+					displayMessage("Failed to detect your current activity. Whenever possible, please go back to the main/role selection menu.");
+					Toolkit.getDefaultToolkit().beep();
+					System.out.println("Failed to detect your current activity. Please go back to the main menu.");
+					warned = true;
+				}
+				 DiscordRichPresence.Builder presence = new DiscordRichPresence.Builder("Playing in a " + (vip ? "private" : "public") + " server");
+		            presence.setDetails("Status couldn't be loaded");
+		            presence.setStartTimestamps(start);
+		            DiscordRPC.discordUpdatePresence(presence.build());
 			}
 			 Thread.sleep(250);
 			} catch (NullPointerException | TesseractException e) {
@@ -561,6 +546,21 @@ public class App {
 				System.exit(1);
 				return;
 			}
+		}
+		} catch(Exception e) {
+			e.printStackTrace();
+			showMessageDialog(null, e.getClass() + ": " + e.getCause() + "\n" + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			Toolkit.getDefaultToolkit().beep();
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+				showMessageDialog(null, e1.getClass() + ": " + e1.getCause() + "\n" + e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+				Toolkit.getDefaultToolkit().beep();
+				
+			}
+			System.exit(1);
+			return;
 		}
 	}
 	public static String shortify(String s) {
@@ -634,4 +634,18 @@ public class App {
 		return a;
 		
 	}
+	
+	public static void displayMessage(String message) throws AWTException {
+        SystemTray tray = SystemTray.getSystemTray();
+
+        Image image = Toolkit.getDefaultToolkit().createImage("icon.png");
+
+        TrayIcon trayIcon = new TrayIcon(image, "Information");
+        trayIcon.setImageAutoSize(true);
+        trayIcon.setToolTip("SCR RichPresence notification");
+        tray.add(trayIcon);
+
+        trayIcon.displayMessage("SCR RichPresence", message, MessageType.INFO);
+    }
+	
 }
