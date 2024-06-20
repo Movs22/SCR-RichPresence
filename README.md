@@ -1,0 +1,3 @@
+# SCR Rich Presence
+
+## Instalation
