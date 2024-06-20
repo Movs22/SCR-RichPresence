@@ -442,7 +442,7 @@ public class App {
 						if(rank == "") {
 							BufferedImage b = img.getSubimage(1740, 474, 175, 23);
 							rank = ts.doOCR(b);
-							BufferedImage c = img.getSubimage(1745, 455, 175, 23);
+							BufferedImage c = img.getSubimage(1745, 455, 175, 31);
 							user = ts.doOCR(c);
 						}
 						if(rank.contains("Guard Manager")) rank = "GM";
