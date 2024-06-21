@@ -7,7 +7,7 @@ This program works by analysing your current Roblox window (by taking screenshot
 > You should also keep in mind that the program sees just like a human so, if something is covering the UI, it won't be able to read it as reliably as it would if nothing was covering it (like a human)!
 
 This program utilizes some 3rd party libraries, such as [Tess4J](https://github.com/nguyenq/tess4j) and [Discord-RPC](https://github.com/Vatuu/discord-rpc). These libraries come bundled with the application and don't have to be downloaded separately.
-You can find everything that's displayed by this RPC below [here](https://github.com/Movs22/SCR-RichPresence/tree/Movs22-patch-1?tab=readme-ov-file#information-displayed).
+You can find everything that's displayed by this RPC below [here](https://github.com/Movs22/SCR-RichPresence/?tab=readme-ov-file#information-displayed).
 
 > **This program does not interact directly with Roblox in any way, nor with any other application except Discord (which is necessary to update your custom activity) and, therefore, won't get you banned off Roblox.**
 
