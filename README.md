@@ -1,11 +1,18 @@
 # SCR Rich Presence
 
-SCR RichPresence is an unofficial Discord RPC created specifically to be used while playing [Stepford County Railway](https://www.roblox.com/groups/3620943/Stepford-County-Railway#!/about). This RPC displays basic information such as the role you're playing (or if you're idling in the main menu), as well as more specific information such as in which station you're dispatching or what's your destination. You can find everything that's displayed by this RPC below [here](https://github.com/Movs22/SCR-RichPresence/tree/Movs22-patch-1?tab=readme-ov-file#information-displayed).
-This program works by analysing your current Roblox window (by taking screenshots and processing them) and then getting information such as the current role and associated information by extracting text and detecting patterns in the game's UI. You should keep in mind that, because of this approach, the results will never be 100% correct. You should also keep in mind that the program sees just like a human so, if something is covering the UI, it won't be able to read it as reliably as it would if nothing was covering it (like a human)!
-This program utilizes some 3rd party libraries, such as [Tess4J](https://github.com/nguyenq/tess4j) and [Discord-RPC](https://github.com/Vatuu/discord-rpc). These libraries come bundled with the application and don't have to be downloaded separately.
-**This program does not interact directly with Roblox in any way, nor with any other application except Discord (which is necessary to update your custom activity) and, therefore, won't get you banned off Roblox.**
+SCR RichPresence is an unofficial Discord RPC created specifically to be used while playing [Stepford County Railway](https://www.roblox.com/groups/3620943/Stepford-County-Railway#!/about). This RPC displays basic information such as the role you're playing (or if you're idling in the main menu), as well as more specific information such as in which station you're dispatching or what's your destination. 
 
-**This is an unofficial program made by a 3rd party and is in no way related to SCR and/or BanTech Systems. Any bugs should be reported to the specific developer ([Movies22](https://discord.com/users/896732255534338078)) and not to the SCR development team.**
+This program works by analysing your current Roblox window (by taking screenshots and processing them) and then getting information such as the current role and associated information by extracting text and detecting patterns in the game's UI. 
+> You should keep in mind that, because of this approach, the results will never be 100% correct. 
+> You should also keep in mind that the program sees just like a human so, if something is covering the UI, it won't be able to read it as reliably as it would if nothing was covering it (like a human)!
+
+This program utilizes some 3rd party libraries, such as [Tess4J](https://github.com/nguyenq/tess4j) and [Discord-RPC](https://github.com/Vatuu/discord-rpc). These libraries come bundled with the application and don't have to be downloaded separately.
+You can find everything that's displayed by this RPC below [here](https://github.com/Movs22/SCR-RichPresence/tree/Movs22-patch-1?tab=readme-ov-file#information-displayed).
+
+> **This program does not interact directly with Roblox in any way, nor with any other application except Discord (which is necessary to update your custom activity) and, therefore, won't get you banned off Roblox.**
+
+> **This is an unofficial program made by a 3rd party and is in no way related to SCR and/or BanTech Systems. Any bugs should be reported to the specific developer ([Movies22](https://discord.com/users/896732255534338078)) and not to the SCR development team.**
+
 
 ## Limitations & Requirements
 In order to run this program, you must meet the following requirements:
@@ -19,22 +26,26 @@ The program presents some limitations, such as:
  - Although the program is able to recognize all activities within the game, it's recommended to start this program while idling in the main menu. If you start it while in a role it might not be able to detect your activity and will prompt you to go back to the main menu (through a push notification). This is especially the case if you start the application while driving/selecting a role, while signalling or while guarding a train (for the latter you can simply leave the train and re-request for the status to detect).
  - As stated above, the program isn't able to text and UIs that are overlapped, therefore you should avoid situations like that for the most accurate results (although, closing the members tab while guarding/dispatching and leaving the chat unfocused while selecting a route should suffice).
 
+
 ## Instalation & Running
->You should begin by heading over to the [releases](https://github.com/Movs22/SCR-RichPresence/releases) page and downloading either the .exe file or the .zip file. It's recommended to download the .exe unless you're planning on modifying the Tesseract data files (if you don't know what those are then you should probably download the .exe), or if you can't run .exe files.
+You should begin by heading over to the [releases](https://github.com/Movs22/SCR-RichPresence/releases) page and downloading either the .exe file or the .zip file. It's recommended to download the .exe version.
 ### Running the .exe:
 > If you chose to download the .exe then you can simply start the application by double clicking it! It'll start a command prompt window which also acts as the program's logger window. To stop this program simply do **control+c**.
+
 > When you run the application for the first time, it'll create a **.SCR-RichPresence** folder in the same directory as the .exe (so if the application is under Downloads, this folder will also be created under the Downloads folder). This folder contains the trained data required by the text recognition part of the program. It also contains a version.txt file to keep track of the app's version.
   
 ### Running the .zip folder:
 > The zip folder contains 3 files: the application itself (SCR-RichPresence.jar), a Java 18 JDK and a run.bat script. The JDK is used to run the .jar file and makes it possible to run the application even if you don't have java installed! You may, however, change the JDK and/or the run.bat file to your liking! 
+
 > This should be as easy as running the .exe. You should first unzip the folder and then, to run the application, simply double click the **run.bat** file. Just like in the .exe, it'll open a command prompt window that acts as the program's logger. To stop the application simply do **control+c**.
+
 > Also like the .exe, this program will create a **.SCR-RichPresence** folder, with the exception that both this folder, the SCR RichPresence app and the auxiliary files will all be located inside one folder.
 
 ### Uninstalling
 > To uninstall the SCR RichPresence application you'll simply have to delete the .exe file and the respective .SCR-RichPresence folder or, if you downloaded the .zip file, the folder that contains the .jar file (and the other auxiliary files), its as simple as that!
 
-## FaQ
 
+## FaQ
 **Q: I've got a prompt from Microsoft Defender**
 > A: You can simply disregard it (by clicking "More info" and the "Run anyway"). Windows gives you this prompt when you run this application for the first time because the .exe file isn't signed (something that I can't do since I'd need a license and fill out paperwork, stuff that wouldn't be worth it for a small coding project like this). This application is safe to run and you're always free to inspect its source code or simply run the "portable" .zip installation instead!
 
@@ -52,6 +63,7 @@ The program presents some limitations, such as:
 
 **Anything else?**
 > Feel free to ask in the [discord server](https://discord.gg/YhVqqc2BsN) or just drop me a DM!
+
 
 ## Information displayed
 ### While driving
@@ -82,6 +94,7 @@ The program presents some limitations, such as:
  - Selecting a role
  - Exploring the map (as a passenger)
  - Exploring the map (in a supervisor+ role)
+
 
 ## Contributing
 This is an open-source project and is open to contributions from anyone, as long as they're constructive and actually useful to the project!
