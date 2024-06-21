@@ -98,7 +98,11 @@ You should begin by heading over to the [releases](https://github.com/Movs22/SCR
 
 ## Contributing
 This is an open-source project and is open to contributions from anyone, as long as they're constructive and actually useful to the project!
+
 To begin contributing you can simply clone this repository (recommended to use Github Desktop for that) and then import it in Eclipse. All of the necessary external jars can be found under the [jars folder](https://github.com/Movs22/SCR-RichPresence/tree/main/jars), although the .classpath file already links to them.
+
 You can also find both the english traineddata and the headcodes traineddata under `src/com/movies22/scr/rpc/tessdata`. The first one is used globally to recognize anything from headcodes to numbers to the next station. The latter is a testing model specialized in train headcodes (although it isn't used at the moment).
+
 **Make sure that your contributions don't affect the program's performance:** try to aim to keep the RAM usage below 250MBs.
+
 Once you're done with your code you can simply create a pull request and it'll eventually be merged (or not)!
