@@ -49,7 +49,7 @@ You should begin by heading over to the [releases](https://github.com/Movs22/SCR
 **Q: I've got a prompt from Microsoft Defender**
 > A: You can simply disregard it (by clicking "More info" and the "Run anyway"). Windows gives you this prompt when you run this application for the first time because the .exe file isn't signed (something that I can't do since I'd need a license and fill out paperwork, stuff that wouldn't be worth it for a small coding project like this). This application is safe to run and you're always free to inspect its source code or simply run the "portable" .zip installation instead!
 
-**Q: I got the following error: "has been compiled by a more recent version of the Java Runtime (class file version 55.0), this version of the Java Runtime only recognizes class file versions up to XX.0"
+**Q: I got the following error: "has been compiled by a more recent version of the Java Runtime (class file version 55.0), this version of the Java Runtime only recognizes class file versions up to XX.0"**
 > A: Make sure that you have **Java 11** or newer installed. (You can check your java version by running `java -version` in the command prompt). If not, then install it [here](https://www.oracle.com/java/technologies/downloads/#java21).
 > If you're still getting this error after installing Java 11 or higher, please contact me (@Movies22). It may be caused by an older Java version that's installed.
 
