@@ -216,6 +216,7 @@ public class Main {
 		
 		//Vars & caches
 		Graphics graphics = null;
+		Roles currentRole = Roles.NONE;
 		
 		//Main detection loop
 		while(true) {
@@ -236,14 +237,26 @@ public class Main {
 					status = validate(CurrentWindow.LOADING, status);
 				} else if (checkPixel(img, 158, -104, MAIN_MENU.getRGB(), Anchor.Horizontal.LEFT, Anchor.Vertical.CENTRE, (debugDraw ? graphics : null))) {
 					status = validate(CurrentWindow.MAIN_MENU, status);
-				} else if (img.getRGB(1772, 670) == WHITE.getRGB()) {
-					status = validate(CurrentWindow.DISPATCHING, status);
-				} else if (img.getRGB(1758, 657) == WHITE.getRGB()) {
-					status = validate(CurrentWindow.GUARDING, status);
-				} else if (img.getRGB(1240, 1028) == WHITE.getRGB()) {
-					status = validate(CurrentWindow.DRIVING, status);
+					currentRole = Roles.NONE;
+				} else if (checkPixel(img, -564, -72, SPAWN.getRGB(), Anchor.Horizontal.CENTRE, Anchor.Vertical.BOTTOM, (debugDraw ? graphics : null)) && currentRole == Roles.NONE) {
+					status = validate(CurrentWindow.SPAWN_MENU, status);
 				} else {
 					status = CurrentWindow.UNKNOWN;
+				}
+				if(status == CurrentWindow.SPAWN_MENU && currentRole == Roles.NONE) {
+					if (checkPixel(img, -169, -290, SPAWN.getRGB(), Anchor.Horizontal.CENTRE, Anchor.Vertical.CENTRE, (debugDraw ? graphics : null))) {
+						currentRole = Roles.PASSENGER;
+					} else if (checkPixel(img, 148, -290, SPAWN.getRGB(), Anchor.Horizontal.CENTRE, Anchor.Vertical.CENTRE, (debugDraw ? graphics : null))) {
+						currentRole = Roles.DRIVER;
+					} else if (checkPixel(img, 468, -290, SPAWN.getRGB(), Anchor.Horizontal.CENTRE, Anchor.Vertical.CENTRE, (debugDraw ? graphics : null))) {
+						currentRole = Roles.DISPATCHER;
+					} else if (img.getRGB(789, 567) == SPAWN.getRGB()) {
+						currentRole = Roles.GUARD;
+					} else if (img.getRGB(1108, 567) == SPAWN.getRGB()) {
+						currentRole = Roles.SIGNALLER;
+					} else if (img.getRGB(1428, 567) == SPAWN.getRGB()) {
+						currentRole = Roles.STAFF;
+					}
 				}
 				//status = CurrentWindow.UNKNOWN;
 			}
