@@ -1,654 +1,349 @@
 package com.movies22.scr.rpc;
 
-import java.awt.AWTException;
-import java.awt.Color;
-import java.awt.Image;
-import java.awt.Rectangle;
-import java.awt.Robot;
-import java.awt.SystemTray;
-import java.awt.Toolkit;
-import java.awt.TrayIcon;
-import java.awt.TrayIcon.MessageType;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-
-import javax.swing.JOptionPane;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
-
-import net.arikia.dev.drpc.DiscordEventHandlers;
-import net.arikia.dev.drpc.DiscordRPC;
-import net.arikia.dev.drpc.DiscordRichPresence;
-import net.sourceforge.tess4j.Tesseract;
-import net.sourceforge.tess4j.TesseractException;
-
 import static javax.swing.JOptionPane.showMessageDialog;
 
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridLayout;
+import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
+import java.awt.event.FocusEvent.Cause;
+import java.awt.event.FocusListener;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.imageio.ImageIO;
+import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JComboBox;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.SwingConstants;
+
 public class App {
-	private static Tesseract ts;
-	private static Tesseract ts2;
-	private static Robot robot;
-	private static CurrentWindow status;
-	private static Color LOAD = new Color(51, 51, 51);
-	private static Color MAIN_MENU = new Color(154, 154, 154);
-	private static Color GREY1 = new Color(104, 104, 104);
-	private static Color QD = new Color(216, 67, 64);
-	private static Color RED = new Color(255, 61, 61);
-	private static Color VIP = new Color(127, 85, 0);
-	private static Color SPAWN = new Color(0, 170, 255);
-	private static Color WHITE = new Color(255, 255, 255);
-	private static Color ROBLOX = new Color(254, 254, 254);
-	private static long start = System.currentTimeMillis();
-	private static String version = "Beta-0.1";
-	private static Boolean update = false;
 
-	@SuppressWarnings("deprecation")
-	public static void main(String[] args) {
-		
-		
-		try {
-		DiscordEventHandlers handlers = new DiscordEventHandlers.Builder().setReadyEventHandler((user) -> {
-            System.out.println("Welcome " + user.username + "#" + user.discriminator + ".");
-            DiscordRichPresence.Builder presence = new DiscordRichPresence.Builder("Playing in a public server");
-            presence.setDetails("Loading status...");
-            presence.setStartTimestamps(start);
-            DiscordRPC.discordUpdatePresence(presence.build());
-        }).build();
-		DiscordRPC.discordInitialize("1227325093781311663", handlers, false);
-		DiscordRPC.discordRegister("1227325093781311663", "");
-		System.out.println("Starting SCR-RichPresence version " + version);
-		System.out.println("Fetching menu...");
-		ts = new Tesseract();
-		ts2 = new Tesseract();
-		ts.setTessVariable("tessedit_char_whitelist", "0123456789:+-. _[]ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
-		ts.setTessVariable("max_permuter_attempts", "750");
-		ts2.setTessVariable("tessedit_char_whitelist", "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZØ ");
-		ts2.setTessVariable("max_permuter_attempts", "750");
-		Path data = Paths.get(".SCR-RichPresence").toAbsolutePath();
-		Path engdata = Paths.get(".SCR-RichPresence/eng.traineddata").toAbsolutePath();
-		Path versdata = Paths.get(".SCR-RichPresence/version.txt").toAbsolutePath();
-		if(Files.notExists(versdata)) {
-			try {
-				new File(data.toString()).mkdirs();
-				File file = new File(versdata.toString());
-				FileWriter a = new FileWriter(file);
-				a.write(version);
-				a.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				showMessageDialog(null, e.getClass() + ": " + e.getCause() + "\n" + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-				Toolkit.getDefaultToolkit().beep();
-				System.out.println("Failed to create data folder");
-				Thread.sleep(5000);
-				System.exit(1);
-				return;
-			}
+	private Boolean dev;
+	
+	private JFrame mainWindow;
+	private JFrame consoleWindow;
+	private JFrame creditsWindow;
+	private JFrame devWindow;
+	private Logger logger;
+	
+	private JLabel status1;
+	private JLabel status2;
+	
+	private Thread consoleThread;
+	
+	private JLabel debugImage = null;
+	private RPC rpc;
+	
+	public App(Boolean d) {
+		this.dev = d;
+		this.logger = Main.logger;
+		this.rpc = Main.rpc;
+	}
+	
+	public void updateStatus(String title, String desc, String... imgKey) {
+		status1.setText(title);
+		status2.setText(desc);
+		if(Main.overrideStatus) {
+			rpc.updateStatus("Testing SCR-RichPresence", "in a dev environment", imgKey);
 		} else {
-			try {
-				if(!version.equals(Files.readString(versdata))) {
-					update = true;
-					System.out.println("The data folder is on an older version. Copying engine data...");
-					FileWriter a = new FileWriter(versdata.toString());
-					a.write(version);
-					a.close();
-				}
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			rpc.updateStatus(title, desc, imgKey);
 		}
-		if(Files.notExists(engdata) || update) {
-			InputStream tessdata = App.class.getResourceAsStream("tessdata/eng.traineddata");
-			try {
-				Files.copy(tessdata, engdata, StandardCopyOption.REPLACE_EXISTING);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				showMessageDialog(null, e.getClass() + ": " + e.getCause() + "\n" + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-				Toolkit.getDefaultToolkit().beep();
-				System.out.println("Failed to copy OCR data. Please contact @Movies22");
-				Thread.sleep(5000);
-				System.exit(1);
-				return;
-			}
+	}
+	
+	public void updateDebugImg(BufferedImage img) {
+		this.debugImage.setIcon(new ImageIcon(Utils.resize(img, img.getWidth()/2, img.getHeight()/2)));
+	}
+	
+	public void spawn() {
+		mainWindow = new JFrame();
+		if(dev) {
+			mainWindow.setSize(350, 450);
+		} else {
+			mainWindow.setSize(300, 400);
 		}
-		ts.setDatapath(".SCR-RichPresence");
-		ts2.setDatapath(".SCR-RichPresence");
-		//ts2.setLanguage("headcodes"); //model isn't finalized yet.
-		Rectangle screen = new Rectangle(0, 0, 1920, 1080);
-		try {
-			robot = new Robot();
-		} catch (AWTException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-			showMessageDialog(null, e.getClass() + ": " + e.getCause() + "\n" + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-			Toolkit.getDefaultToolkit().beep();
-			Thread.sleep(5000);
-			System.exit(1);
-			return;
-		}
-		BufferedImage img;
-		img = robot.createScreenCapture(screen);
+		mainWindow.setResizable(false);
+		mainWindow.setLocationRelativeTo(null);
+		mainWindow.getContentPane().setLayout(new BoxLayout(mainWindow.getContentPane(), BoxLayout.Y_AXIS));
+		
+		// Status frame
+		JPanel statusFrame = new JPanel();
+		statusFrame.setLayout(new BoxLayout(statusFrame, BoxLayout.Y_AXIS));
+		JLabel statusT = new JLabel("Current status");
+		status1 = new JLabel("Loading");
+		status2 = new JLabel("status...");
+		
+		statusT.setFont(new Font("Arial", Font.BOLD, 25));
+		statusT.setAlignmentX(Component.CENTER_ALIGNMENT);
+		status1.setFont(new Font("Arial", Font.PLAIN, 16));
+		status1.setAlignmentX(Component.CENTER_ALIGNMENT);
+		status2.setFont(new Font("Arial", Font.PLAIN, 16));
+		status2.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-		try {
-			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException
-				| UnsupportedLookAndFeelException e) {
-			e.printStackTrace();
+		statusFrame.add(statusT);
+		statusFrame.add(status1);
+		statusFrame.add(status2);
+		statusFrame.setPreferredSize(new Dimension(300, 100));
+		
+		// UNUSED so far
+		JPanel textPanel = new JPanel();
+		textPanel.setPreferredSize(new Dimension(300, 200));
+		
+		mainWindow.add(textPanel);
+		
+		JPanel buttonPanel = new JPanel();
+		JButton button = new JButton();
+		JButton button1 = new JButton();
+		JButton button2 = new JButton();
+		JButton button3 = new JButton();
+		textPanel.setBackground(Color.BLACK);
+		button.setText("Resize window");
+		button1.setText("Credits");
+		
+		buttonPanel.add(button);
+		buttonPanel.add(button1);
+		
+		if (dev) {
+			buttonPanel.setLayout(new GridLayout(1, 2, 3, 3));
+			buttonPanel.setPreferredSize(new Dimension(300, 50));
+			JPanel buttonPanel2 = new JPanel();
+			buttonPanel2.setLayout(new GridLayout(1, 3, 3, 3));
+			buttonPanel2.setPreferredSize(new Dimension(300, 50));
+			JButton button4 = new JButton();
+			button2.setText("DEBUG");
+			button3.setText("CONSOLE");
+			button4.setText("DEV VIEW");
+
+			buttonPanel2.add(button2);
+			buttonPanel2.add(button3);
+			buttonPanel2.add(button4);
+			buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 1, 10));
+			buttonPanel2.setBorder(BorderFactory.createEmptyBorder(1, 10, 10, 10));
+			mainWindow.add(buttonPanel);
+			mainWindow.add(buttonPanel2);
+			debugImage = new JLabel();
+			button4.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					if (devWindow != null) {
+						devWindow.requestFocus(Cause.MOUSE_EVENT);
+					} else {
+						devWindow = new JFrame();
+						devWindow.setSize(1920/2+100, 1080/2+100);
+						devWindow.setResizable(false);
+						devWindow.setVisible(true);
+						devWindow.add(debugImage);
+						devWindow.setSize(1920/2+100, 1080/2+100);
+						Main.debugDraw = true;
+						devWindow.addWindowListener(new WindowAdapter() {
+
+							@Override
+							public void windowClosing(WindowEvent e) {
+								Main.debugDraw = false;
+								devWindow = null;
+							}
+
+							@Override
+							public void windowClosed(WindowEvent e) {
+								devWindow = null;
+							}
+
+						});
+					}
+				}
+
+			});
+		} else {
+
+			buttonPanel.setLayout(new GridLayout(2, 2, 3, 3));
+			buttonPanel.setPreferredSize(new Dimension(300, 100));
+			button2.setText("Debug mode");
+			button3.setText("Open console");
+
+			buttonPanel.add(button);
+			buttonPanel.add(button1);
+			buttonPanel.add(button2);
+			buttonPanel.add(button3);
+			buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+			mainWindow.add(buttonPanel);
+		}
+
+		if(dev) {
+			JPanel devPanel = new JPanel();
+			devPanel.setLayout(new GridLayout(2, 1, 3, 3));
+			devPanel.setPreferredSize(new Dimension(300, 50));
+			JLabel title = new JLabel("DEVELOPER | Override activity");
+			devPanel.add(title);
+			JPanel devRowPanel = new JPanel();
+			devRowPanel.setLayout(new GridLayout(1, 2, 3, 3));
+			JComboBox<Object> statusMenu = new JComboBox<Object>(CurrentWindow.values());
+			JButton overrideButton = new JButton();
+			overrideButton.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					CurrentWindow sel = (CurrentWindow) statusMenu.getSelectedItem();
+					if(sel == CurrentWindow.UNKNOWN) {
+						Main.overrideStatus = false;
+					} else {
+						Main.overrideStatus = true;
+						Main.overriden = sel;
+					}
+				}
+			});
+			
+			overrideButton.setText("Override");
+			devRowPanel.add(statusMenu);
+			devRowPanel.add(overrideButton);
+			devPanel.setBorder(BorderFactory.createEmptyBorder(3, 10, 3, 10));
+			devPanel.add(devRowPanel);
+			
+			mainWindow.add(devPanel);
 		}
 		
-		if(img.getRGB(27, 11) != ROBLOX.getRGB() && img.getRGB(27, 11) != WHITE.getRGB()) {
-			showMessageDialog(null, "Couldn't find a roblox instance in the main monitor. \nPlease make sure that it's in fullscreen, that you're in a roblox game and that it's in a 1920x1080 screen. \nIf this error keeps occuring, please contact @Movies22", "Alert", JOptionPane.ERROR_MESSAGE);
-			Toolkit.getDefaultToolkit().beep();
-			System.exit(1);
-			return;
-		}
-		System.out.println("Main menu has loaded!");
-		Operators curOperator = Operators.UNKNOWN;
-		Operators curOperator2 = Operators.UNKNOWN;
-		Boolean vip = false;
-		Boolean warned = false;
-		Boolean loading = false;
-		String lastStop = null;
-		String curStop = "";
-		String curStop2 = "";
-		String curStopA = "";
-		String rank = "";
-		String user = "";
-		String zone = "";
-		String currentStop = "";
-		String currentDest = "";
-		String currentHeadcode = "";
-		String selRank = "";
-		long lastCheck = 0L;
-		long message = 0;
-		while(true) {
-			message = (System.currentTimeMillis() - start) % 10000;
-			img = robot.createScreenCapture(screen);
-			if(img.getRGB(27, 11) != ROBLOX.getRGB() && img.getRGB(27, 11) != WHITE.getRGB()) {
-				if(lastCheck == 0L) lastCheck = System.currentTimeMillis();
-				System.out.println("User isn't playing roblox anymore. Quitting in " + (15-Math.ceil((System.currentTimeMillis() - lastCheck)/100)/10) + " seconds.");
-				if((System.currentTimeMillis() - lastCheck) > 15000) {
-					System.out.println("User isn't playing roblox anymore. Quitting...");
-					System.exit(1);
-				}
-			} else {
-				lastCheck = 0L;
-			}
-			if(img.getRGB(995, 947) == LOAD.getRGB()) {
-				status = validate(CurrentWindow.LOADING, status);
-			} else if(img.getRGB(158, 436) == MAIN_MENU.getRGB()) {
-				selRank = null;
-				status = validate(CurrentWindow.MAIN_MENU, status);
-			} else if(img.getRGB(543, 1023) == WHITE.getRGB()) {
-				status = validate(CurrentWindow.DRIVING, status);
-			} else if(img.getRGB(1772, 670) == WHITE.getRGB()) {
-				status = validate(CurrentWindow.DISPATCHING, status);
-			}  else if(img.getRGB(1758, 657) == WHITE.getRGB()) {
-				status = validate(CurrentWindow.GUARDING, status);
-			} else if(img.getRGB(1240, 1028) == WHITE.getRGB()) {
-				status = validate(CurrentWindow.DRIVING, status);
-			} /*else if(sgcol.getRed() > 220 && sgcol.getGreen() > 210 && sgcol.getBlue() > 210 && status == CurrentWindow.SPAWN_MENU) {
-				status = validate(CurrentWindow.SIGNALLING, status);
-			}*/ else if(img.getRGB(862, 303) == QD.getRGB()) {
-				status = validate(CurrentWindow.SPAWN_MENU, status);
-				curOperator = Operators.UNKNOWN;
-			} else if(img.getRGB(396, 1008) == SPAWN.getRGB() && (curOperator == null || curOperator == Operators.UNKNOWN) && selRank == null) {
-				status = validate(CurrentWindow.SPAWN_MENU, status);
-			}
-			if(status == CurrentWindow.SPAWN_MENU && img.getRGB(24, 1008) == MAIN_MENU.getRGB()) {
-				if(img.getRGB(789, 248) == SPAWN.getRGB()) {
-					selRank = "Passenger";
-				} else if(img.getRGB(1108, 248) == SPAWN.getRGB()) {
-					selRank = "Driver";
-				} else if(img.getRGB(1428, 248) == SPAWN.getRGB()) {
-					selRank = "Dispatcher";
-				} else if(img.getRGB(789, 567) == SPAWN.getRGB()) {
-					selRank = "Guard";
-				} else if(img.getRGB(1108, 567) == SPAWN.getRGB()) {
-					selRank = "Signaller";
-				} else if(img.getRGB(1428, 567) == SPAWN.getRGB()) {
-					selRank = "Staff";
-				}
-			} else if(status == CurrentWindow.SPAWN_MENU && selRank != null) {
-				switch(selRank) {
-					case "Passenger":
-						status = validate(CurrentWindow.EXPLORING, status);
-						break;
-					case "Signaller":
-						status = validate(CurrentWindow.SIGNALLING, status);
-						break;
-					case "Staff":
-						status = validate(CurrentWindow.SUPERVISOR, status);
-						break;
-				}
-			}
-
-			if(img.getRGB(1877, 9) == VIP.getRGB()) {
-				vip = true;
-			}
-			try {
-			if(status == CurrentWindow.SPAWN_MENU && img.getRGB(743, 1008) == GREY1.getRGB()) {
-				BufferedImage stationimg = img.getSubimage(30, 134, 335, 845);
-				BufferedImage curimg = null;
-				for(int i = 0; i < 845; i++) {
-					if(stationimg.getRGB(0, i) == GREY1.getRGB()) i += 65;
-					if(i >= 845) break;
-					if(stationimg.getRGB(0, i) == LOAD.getRGB()) {
-						for(int b = i; b > i-66; b--) {
-							if(b > 845 || b < 0) break;
-							if(stationimg.getRGB(0, b) != LOAD.getRGB()) break;
-							i--;
-						}
-						if(i+11+35 > 845 || i+11 < 0) break;
-						curimg = stationimg.getSubimage(10, 11+i, 315, 35);
-						currentStop = ts.doOCR(curimg).replaceAll("\\n", "");
-						i = 845;
-					}
-				}
-			}
-			DiscordRPC.discordRunCallbacks();
-			if(status != null) {
-				DiscordRichPresence.Builder presence;
-				if(status == CurrentWindow.DRIVING) {
-					curOperator2 = curOperator.getOperator(img.getRGB(192, 60), curOperator);
-					if(curOperator2 != Operators.UNKNOWN) curOperator = curOperator2;
-					if(curOperator2 != Operators.UNKNOWN) {
-						presence = new DiscordRichPresence.Builder(vip ? "In a private server" : "In a public server");
-						presence.setDetails("Selecting a route");
-						presence.setStartTimestamps(start);
-						currentHeadcode = "";
-						currentDest = "";
-						presence.setBigImage("scrlogo", "SCR 1.10.13");
-						//presence.setSmallImage("logo", curOperator.name);
-						DiscordRPC.discordUpdatePresence(presence.build());
-					} else {
-						if(img.getRGB(1078, 1017) == WHITE.getRGB()) {
-							if(lastStop != curStop) loading = false;
-							Color check = new Color(img.getRGB(1069, 1040));
-							BufferedImage y = img.getSubimage(767, 1003, 46, 19);
-							String h = ts2.doOCR(Utils.resize(y, 46*2, 19*2)).replaceAll("[^A-Z\\d]", "");
-							if(h.length() < 4) h = currentHeadcode;
-							if(h == "") continue;
-							try {
-								Integer.parseInt(h.substring(0, 1));
-							} catch(Exception e) {
-								continue;
-							}
-							currentHeadcode = parseHeadcode(h, curOperator);
-							if(check.getRed() > 200 && check.getGreen() > 120 && check.getBlue() < 40) {
-								loading = true;
-								if(message < 5000) {
-									BufferedImage a = img.getSubimage(665, 1021, 245, 30);
-										curStop = ts.doOCR(a);
-									presence = new DiscordRichPresence.Builder("Loading at " + shortify(curStop));
-									lastStop = curStop;
-								} else {
-									BufferedImage a = img.getSubimage(852, 1055, 30, 18);
-									curStop = ts.doOCR(a);
-									if(curStop.contains("00")) curStop = "00";
-									try {
-										int z = Integer.parseInt(curStop.replaceAll("\\+", "").replaceAll("\\n", ""));
-										if(z < 1) curStop = "on time";
-										else curStop = z + " min" + (z > 1 ? "s" : "") + " late";
-										presence = new DiscordRichPresence.Builder("Service running " + shortify(curStop));
-										lastStop = curStop;
-									} catch(Exception e) {
-										continue;
-									}
-								}
-							} else {
-								if(loading) {
-									loading = false;
-									curStopA = "";
-									Thread.sleep(1000);
-								}
-								BufferedImage c;
-								if(message < 5000) {
-								BufferedImage a = img.getSubimage(665, 1021, 245, 30);
-								curStop2 = ts.doOCR(a);
-									if(curStopA.equals("") || !curStop2.equals(curStop)) {
-										c = img.getSubimage(684, 1057, 36, 14);
-										curStopA = ts.doOCR(c);
-									}
-									curStop = curStop2;
-									presence = new DiscordRichPresence.Builder("NS: " + shortify(curStop) + " @ " + curStopA);
-								} else {
-									switch(currentHeadcode.toLowerCase().charAt(1)) {
-										case 'a':
-											currentDest = "Airport Central";
-											break;
-										case 'b':
-											currentDest = "Benton";
-											break;
-										case 'c':
-											currentDest = "Beechley";
-											break;
-										case 'd':
-											currentDest = "Willowfield";
-											break;
-										case 'e':
-											currentDest = "Edgemead";
-											break;
-										case 'f':
-											currentDest = "Whitefield";
-											break;
-										case 'g':
-											currentDest = "Greenfield";
-											break;
-										case 'h':
-											currentDest = "Newry Harbour";
-											break;
-										case 'i':
-											currentDest = "St Helens Bridge";
-											break;
-										case 'j':
-											currentDest = "Farleigh";
-											break;
-										case 'k':
-											currentDest = "Leighton West";
-											break;
-										case 'l':
-											currentDest = "Llyn-by-the-Sea";
-											break;
-										case 'm':
-											currentDest = "Morganstown";
-											break;
-										case 'n':
-											currentDest = "Newry";
-											break;
-										case 'o':
-											currentDest = "Connolly";
-											break;
-										case 'p':
-											currentDest = curOperator == Operators.AIRLINK ? "Airport Parkway" : "Port Benton";
-											break;
-										case 'q':
-											currentDest = "Esterfield";
-											break;
-										case 'r':
-											currentDest = "Leighton Stepford Road";
-											break;
-										case 's':
-											currentDest = "Stepford Central";
-											break;
-										case 't':
-											currentDest = "Leighton City";
-											break;
-										case 'u':
-											currentDest = "Stepford UFC";
-											break;
-										case 'v':
-											currentDest = "Stepford Victoria";
-											break;
-										case 'w':
-											currentDest = "Westwyvern";
-											break;
-										case 'x':
-											currentDest = "Terminal 2";
-											break;
-										case 'y':
-											currentDest = "Berrily";
-											break;
-										case 'z':
-											currentDest = "Terminal 3";
-											break;
-										default:
-											currentDest = "Unknown";
-											break;
-									}
-									presence = new DiscordRichPresence.Builder("Service to " + shortify(currentDest));
-								}
-							}
-							presence.setDetails("Driving a" + ((curOperator == Operators.AIRLINK || curOperator == Operators.EXPRESS) ? "n " : " ") + curOperator.toString().toLowerCase() + " service as " + currentHeadcode.toUpperCase());
-							
-						} else {
-							presence = new DiscordRichPresence.Builder("Selecting a depot");
-							presence.setDetails("Driving a" + ((curOperator == Operators.AIRLINK || curOperator == Operators.EXPRESS) ? "n " : " ") + curOperator.toString().toLowerCase() + " service.");
-						}
-						presence.setStartTimestamps(start);
-						presence.setBigImage("scrlogo", "SCR 1.10.13");
-						presence.setSmallImage(curOperator.name().toLowerCase(), curOperator.name);
-						DiscordRPC.discordUpdatePresence(presence.build());
-					}
-					rank = "";
-				} else if(status == CurrentWindow.DISPATCHING) {
-					Color col = new Color(img.getRGB(1810, 497));
-					if((col.getRed() < 100) && (col.getGreen() > 160) && (col.getBlue() > 160)) {
-						BufferedImage headcode = img.getSubimage(1798, 476, 65, 30);
-						BufferedImage plat = img.getSubimage(1755, 434, 144, 30);
-						presence = new DiscordRichPresence.Builder("Dispatching " + ts2.doOCR(headcode).replaceAll("\\n", "").toUpperCase() + " at " + ts.doOCR(plat).replaceAll("\\n", ""));
-					} else {
-						presence = new DiscordRichPresence.Builder(vip ? "In a private server" : "In a public server");
-					}
-					presence.setDetails("Dispatching at " + shortify2(currentStop));
-					presence.setStartTimestamps(start);
-					presence.setBigImage("scrlogo", "SCR 1.10.13");
-					presence.setSmallImage("ds", "Dispatching");
-					DiscordRPC.discordUpdatePresence(presence.build());
-				}  else if(status == CurrentWindow.GUARDING) {
-					curStop = "";
-					if(img.getRGB(1746, 646) == RED.getRGB()) {
-						BufferedImage a = img.getSubimage(1745, 591, 175, 23);
-						String t = ts.doOCR(a);
-						if(rank == "") {
-							BufferedImage b = img.getSubimage(1740, 474, 175, 23);
-							rank = ts.doOCR(b);
-							BufferedImage c = img.getSubimage(1745, 455, 175, 31);
-							user = ts.doOCR(c);
-						}
-						if(rank.contains("Guard Manager")) rank = "GM";
-						if(rank.contains("Senior Guard")) rank = "SGD";
-						if(rank.contains("Senior Dispatcher")) rank = "SDS";
-						if(rank.contains("Guard")) rank = "GD";
-						if(rank.contains("Guest")) rank = "GUEST";
-						if(rank.contains("Dispatcher")) rank = "DS";
-						else {
-							rank = rank.split("\\]")[0];
-							rank = rank.split("\\[").length > 1 ? rank.split("\\[")[1] : rank;
-							rank.replaceAll("6", "G");
-						}
-						presence = new DiscordRichPresence.Builder("NS: " + shortify(t));
-						presence.setDetails("Guarding [" + rank + "] " + user);
-					} else {
-						rank = "";
-						presence = new DiscordRichPresence.Builder("Selecting a train");
-						presence.setDetails("Guarding in a " + (vip ? "private" : "public") + " server.");
-					}
-					presence.setStartTimestamps(start);
-					presence.setBigImage("scrlogo", "SCR 1.10.13");
-					presence.setSmallImage("gd", "Guarding");
-					DiscordRPC.discordUpdatePresence(presence.build());
-				} else if(status == CurrentWindow.SIGNALLING) {
-					Color col = new Color(img.getRGB(838, 40));
-					if(col.getRed() > 220 && col.getGreen() > 210 && col.getBlue() > 210) {
-						BufferedImage a = img.getSubimage(254, 17, 230, 40);
-						zone = ts.doOCR(a);
-						int trains = 0;
-						for(int y = 454; y < 1033; y++) {
-							Color check = new Color(img.getRGB(1737, y));
-							if(((check.getRed() < 50 && check.getGreen() > 50) || (check.getRed() > 50 && check.getGreen() > 60) || (check.getRed() > 50 && check.getGreen() < 50)) && check.getBlue() < 50) {
-								trains++;
-								y += 39;
-							}
-						}
-						presence = new DiscordRichPresence.Builder(trains + " train" + (trains == 1 ? "" : "s") + " in this zone.");
-						if(zone.contains("Supervisor")) {
-							presence.setDetails("Idling in the supervisor desk");
-						} else if(!zone.contains("Zone") && !zone.contains("Supervisor")) {
-							presence.setDetails("Checking the trains list");
-						} else {
-							presence.setDetails("Signalling in " + zone);
-						}
-						presence.setStartTimestamps(start);
-						presence.setBigImage("scrlogo", "SCR 1.10.13");
-						presence.setSmallImage("sg", "Signalling");
-						DiscordRPC.discordUpdatePresence(presence.build());
-					} else {
-						Color checkCol = new Color(img.getRGB(818, 84));
-						if(checkCol.getBlue() > 160 && checkCol.getGreen() > 120 && checkCol.getRed() < 60) {
-							BufferedImage camtxt = img.getSubimage(906, 90, 115, 38);
-							String cam = ts2.doOCR(Utils.resize(camtxt, 115*2, 38*2));
-							presence = new DiscordRichPresence.Builder("Viewing " + cam);
-							if(zone.contains("Supervisor")) {
-								presence.setDetails("Idling in the supervisor desk");
-							} else if(!zone.contains("Zone") && !zone.contains("Supervisor")) {
-								presence.setDetails("Checking the trains list");
-							} else {
-								presence.setDetails("Signalling in " + zone);
-							}
-							presence.setStartTimestamps(start);
-							presence.setBigImage("scrlogo", "SCR 1.10.13");
-							presence.setSmallImage("sg", "Signalling");						
-							DiscordRPC.discordUpdatePresence(presence.build());
-						} else {
-						zone = "";
-						presence = new DiscordRichPresence.Builder(vip ? "In a private server" : "In a public server");
-						presence.setDetails("Idling in the signaller role");
-						presence.setStartTimestamps(start);
-						presence.setBigImage("scrlogo", "SCR 1.10.13");
-						presence.setSmallImage("sg", "Signalling");						
-						DiscordRPC.discordUpdatePresence(presence.build());
-						}
-					}
+		mainWindow.add(statusFrame);
+		// statusFrame.setBackground(Color.RED);
+		// window.getContentPane().add(button1);
+		// window.getContentPane().add(button2);
+		
+		button1.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (creditsWindow != null) {
+					creditsWindow.requestFocus(Cause.MOUSE_EVENT);
 				} else {
-					presence = new DiscordRichPresence.Builder(vip ? "In a private server" : "In a public server");
-					presence.setDetails(status.t);
-					presence.setStartTimestamps(start);
-					presence.setBigImage("scrlogo", "SCR 1.10.13");
-					DiscordRPC.discordUpdatePresence(presence.build());
-					curOperator = Operators.UNKNOWN;
+					creditsWindow = new JFrame();
+					creditsWindow.setSize(200, 100);
+					creditsWindow.setLocationRelativeTo(null);
+					creditsWindow.setResizable(false);
+					creditsWindow.setBackground(Color.white);
+					creditsWindow.setTitle("Credits");
+					creditsWindow.setLayout(new GridLayout(3, 1, 0, 0));
+					creditsWindow.add(new JLabel("Author: Movies22", SwingConstants.CENTER));
+					creditsWindow.add(new JLabel("Licensed under the MIT License.", SwingConstants.CENTER));
+					creditsWindow.add(new JLabel("© 2024 Movies22", SwingConstants.CENTER));
+					creditsWindow.setVisible(true);
+
 				}
-			} else {
-				if(!warned) {
-					displayMessage("Failed to detect your current activity. Whenever possible, please go back to the main/role selection menu.");
-					Toolkit.getDefaultToolkit().beep();
-					System.out.println("Failed to detect your current activity. Please go back to the main menu.");
-					warned = true;
-				}
-				 DiscordRichPresence.Builder presence = new DiscordRichPresence.Builder("Playing in a " + (vip ? "private" : "public") + " server");
-		            presence.setDetails("Status couldn't be loaded");
-		            presence.setStartTimestamps(start);
-		            DiscordRPC.discordUpdatePresence(presence.build());
 			}
-			 Thread.sleep(250);
-			} catch (NullPointerException | TesseractException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				showMessageDialog(null, e.getClass() + ": " + e.getCause() + "\n" + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-				Toolkit.getDefaultToolkit().beep();
-				Thread.sleep(5000);
-				System.exit(1);
-				return;
-			}
-		}
-		} catch(Exception e) {
-			e.printStackTrace();
-			showMessageDialog(null, e.getClass() + ": " + e.getCause() + "\n" + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-			Toolkit.getDefaultToolkit().beep();
-			try {
-				Thread.sleep(5000);
-			} catch (InterruptedException e1) {
-				e1.printStackTrace();
-				showMessageDialog(null, e1.getClass() + ": " + e1.getCause() + "\n" + e1.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-				Toolkit.getDefaultToolkit().beep();
-				
-			}
-			System.exit(1);
-			return;
-		}
-	}
-	public static String shortify(String s) {
-		s = s.replaceAll("\\n","");
-		if(s.equals("Leighton Stepford Road")) return "Leighton Step Rd";
-		if(s.equals("Millcastle Racecourse")) return "Mill. Racecourse";
-		if(s.equals("Stepford United Football")) return "Stepford UFC";
-		if(s.equals("Cambridge Street...")) return "Cambridge Street Pkw";
-		return s;
-	}
-	public static String shortify2(String s) {
-		s = s.replaceAll("\\n","");
-		if(s.equals("Stepford United Football Club")) return "Stepford UFC";
-		return s;
-	}
-	
-	public static String parseHeadcode(String h, Operators c) {
-		char prefix = h.charAt(0);
-		char dest;
-		switch(h.charAt(1)) {
-			case '1':
-				dest = 'I';
-				break;
-			case '4':
-				dest = c == Operators.WATERLINE ? 'J' : 'A';
-				break;
-			case '5':
-				dest = 'S';
-				break;
-			case '8':
-				dest = 'S';
-				break;
-			case '0':
-				dest = 'O';
-				break;
-			case '6':
-				dest = 'G';
-				break;
-			case '7':
-				dest = 'T';
-				break;
-			default:
-				dest = h.charAt(1);
-				break;
-		}
-		char number1 = h.charAt(2);
-		char number2 = h.length() > 3 ? h.charAt(3) : h.charAt(2);
-		switch(number1) {
-			case 'o':
-				number1 = '0';
-				break;
-			case 'O':
-				number1 = '0';
-				break;
-		}
-		switch(number2) {
-		case 'o':
-			number2 = '0';
-			break;
-		case 'O':
-			number2 = '0';
-			break;
-	}
-		return ""+prefix + dest + number1 + number2;
-	}
-	public static CurrentWindow validate(CurrentWindow b, CurrentWindow a) {
-		if(a == null) return b;
-		if(b.v > a.v) return b;
-		if(b.v == (a.v - 1)) return b;
-		if(b.v == 1) return b;
-		return a;
+
+		});
 		
+		button3.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (consoleWindow != null) {
+					consoleWindow.requestFocus(Cause.MOUSE_EVENT);
+				} else {
+					consoleWindow = new JFrame();
+					consoleWindow.setSize(1000, 400);
+					JTextArea logs = new JTextArea();
+					try {
+						logs.read(new FileReader(Main.dataFolder.toString() + "latest.log"), "Loading...");
+					} catch (FileNotFoundException e1) {
+						logger.log(Level.SEVERE, e1.getMessage(), e1.getCause());
+					} catch (IOException e1) {
+						logger.log(Level.SEVERE, e1.getMessage(), e1.getCause());
+					}
+					logs.addFocusListener(new FocusListener() {
+
+						@Override
+						public void focusLost(FocusEvent e) {
+							logs.setEditable(true);
+						}
+
+						@Override
+						public void focusGained(FocusEvent e) {
+							logs.setEditable(false);
+
+						}
+					});
+					consoleWindow.setTitle("SCR RichPresence - Console");
+					consoleWindow.add(new JScrollPane(logs));
+					consoleWindow.addWindowListener(new WindowAdapter() {
+
+						@Override
+						public void windowClosing(WindowEvent e) {
+							consoleThread.interrupt();
+							consoleWindow = null;
+						}
+
+						@Override
+						public void windowClosed(WindowEvent e) {
+							consoleWindow = null;
+						}
+
+					});
+					consoleWindow.setVisible(true);
+					consoleThread = new Thread() {
+						public void run() {
+							while (true) {
+								try {
+									logs.read(new FileReader(Main.dataFolder.toString() + "/latest.log"), "Loading...");
+								} catch (FileNotFoundException e1) {
+									logger.log(Level.SEVERE, e1.getMessage(), e1.getCause());
+								} catch (IOException e1) {
+									logger.log(Level.SEVERE, e1.getMessage(), e1.getCause());
+								}
+								try {
+									Thread.sleep(1000);
+								} catch (InterruptedException e) {
+									
+								}
+							}
+						}
+					};
+					consoleThread.start();
+
+				}
+			}
+
+		});
+		
+		mainWindow.addWindowListener(new WindowAdapter() {
+
+			@Override
+			public void windowClosing(WindowEvent e) {
+				showMessageDialog(null, "Closing this window will stop the rich presence.", "Alert",
+						JOptionPane.ERROR_MESSAGE);
+				Toolkit.getDefaultToolkit().beep();
+				System.exit(1);
+			}
+
+			@Override
+			public void windowClosed(WindowEvent e) {
+				System.exit(1);
+			}
+
+		});
+		InputStream r = Main.class.getResourceAsStream("resources/icon.png");
+		try {
+			mainWindow.setIconImage(ImageIO.read(r));
+		} catch (IOException e) {
+			logger.log(Level.SEVERE, e.getMessage(), e.getCause());
+		}
+		mainWindow.setTitle("SCR RichPresence");
+		mainWindow.setVisible(true);
 	}
-	
-	public static void displayMessage(String message) throws AWTException {
-        SystemTray tray = SystemTray.getSystemTray();
-
-        Image image = Toolkit.getDefaultToolkit().createImage("icon.png");
-
-        TrayIcon trayIcon = new TrayIcon(image, "Information");
-        trayIcon.setImageAutoSize(true);
-        trayIcon.setToolTip("SCR RichPresence notification");
-        tray.add(trayIcon);
-
-        trayIcon.displayMessage("SCR RichPresence", message, MessageType.INFO);
-    }
-	
 }
