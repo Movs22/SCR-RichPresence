@@ -145,7 +145,7 @@ public class App {
 			e.printStackTrace();
 		}
 		
-		if(img.getRGB(27, 11) != ROBLOX.getRGB() && img.getRGB(27, 11) != WHITE.getRGB()) {
+		if(img.getRGB(27, 11) != ROBLOX.getRGB() && img.getRGB(27, 11) != WHITE.getRGB() && img.getRGB(32, 27) != WHITE.getRGB()) {
 			showMessageDialog(null, "Couldn't find a roblox instance in the main monitor. \nPlease make sure that it's in fullscreen, that you're in a roblox game and that it's in a 1920x1080 screen. \nIf this error keeps occuring, please contact @Movies22", "Alert", JOptionPane.ERROR_MESSAGE);
 			Toolkit.getDefaultToolkit().beep();
 			System.exit(1);
@@ -173,7 +173,7 @@ public class App {
 		while(true) {
 			message = (System.currentTimeMillis() - start) % 10000;
 			img = robot.createScreenCapture(screen);
-			if(img.getRGB(27, 11) != ROBLOX.getRGB() && img.getRGB(27, 11) != WHITE.getRGB()) {
+			if(img.getRGB(27, 11) != ROBLOX.getRGB() && img.getRGB(27, 11) != WHITE.getRGB() && img.getRGB(32, 27) != WHITE.getRGB()) {
 				if(lastCheck == 0L) lastCheck = System.currentTimeMillis();
 				System.out.println("User isn't playing roblox anymore. Quitting in " + (15-Math.ceil((System.currentTimeMillis() - lastCheck)/100)/10) + " seconds.");
 				if((System.currentTimeMillis() - lastCheck) > 15000) {
