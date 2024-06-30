@@ -16,7 +16,7 @@ You can find everything that's displayed by this RPC below [here](https://github
 
 ## Limitations & Requirements
 In order to run this program, you must meet the following requirements:
- - You must be using either Windows 10 or 11 (you may try to use older OSes, as long as they're able to run Java, however it's not guaranteed to work)
+ - You must be using either Windows 7 (SP1), 8, 8.1, 10 or 11 (you may try to use older OSes, as long as they're able to run Java, however it's not guaranteed to work) and you must have **at least** Java 11. (if your computer can run Minecraft 1.13 then you have a compatible Java version)
  - Roblox must be running as a **fullscreen** application, in your **primary monitor** and must be set to a **1920 by 1080** resolution. This is something that'll be changed in future versions to support more resolutions
  - Your driver HUD must be set to "small".
 
@@ -28,7 +28,7 @@ The program presents some limitations, such as:
 
 
 ## Instalation & Running
-You should begin by heading over to the [releases](https://github.com/Movs22/SCR-RichPresence/releases) page and downloading either the .exe file or the .zip file. It's recommended to download the .exe version.
+You should begin by heading over to the [releases](https://github.com/Movs22/SCR-RichPresence/releases) page and downloading either the .exe file or the .zip file. It's recommended to download the .exe version but you can use the .zip version if you don't have a compatible java version or if you're unable to install a compatible java version.
 ### Running the .exe:
 > If you chose to download the .exe then you can simply start the application by double clicking it! It'll start a command prompt window which also acts as the program's logger window. To stop this program simply do **control+c**.
 
@@ -48,6 +48,10 @@ You should begin by heading over to the [releases](https://github.com/Movs22/SCR
 ## FaQ
 **Q: I've got a prompt from Microsoft Defender**
 > A: You can simply disregard it (by clicking "More info" and the "Run anyway"). Windows gives you this prompt when you run this application for the first time because the .exe file isn't signed (something that I can't do since I'd need a license and fill out paperwork, stuff that wouldn't be worth it for a small coding project like this). This application is safe to run and you're always free to inspect its source code or simply run the "portable" .zip installation instead!
+
+**Q: I got the following error: "has been compiled by a more recent version of the Java Runtime (class file version 55.0), this version of the Java Runtime only recognizes class file versions up to XX.0"**
+> A: Make sure that you have **Java 11** or newer installed. (You can check your java version by running `java -version` in the command prompt). If not, then install it [here](https://www.oracle.com/java/technologies/downloads/#java21).
+> If you're still getting this error after installing Java 11 or higher, please contact me (@Movies22). It may be caused by an older Java version that's installed.
 
 **Q: Will this application be ported for Mac/Linux?**
 > A: Currently I have no plans to port the application to other OSes, mainly due to the fact that MacOS is much stricter in terms of security and permissions and because something like this probably wouldn't be possible in other OSes.

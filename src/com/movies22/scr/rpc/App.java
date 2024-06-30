@@ -105,6 +105,7 @@ public class App {
 		statusFrame.add(status2);
 		statusFrame.setPreferredSize(new Dimension(300, 100));
 		
+
 		// UNUSED so far
 		JPanel textPanel = new JPanel();
 		textPanel.setPreferredSize(new Dimension(300, 200));
