@@ -18,12 +18,4 @@ public enum Operators {
 		this.name = n;
 	}
 	
-	public Operators getOperator(int col, Operators fallback) {
-		if(col == AIRLINK.color.getRGB()) return AIRLINK;
-		if(col == CONNECT.color.getRGB()) return CONNECT;
-		if(col == EXPRESS.color.getRGB()) return EXPRESS;
-		if(col == WATERLINE.color.getRGB()) return WATERLINE;
-		if(col == SELECTING.color.getRGB()) return fallback;
-		return UNKNOWN;
-	}
 }

@@ -78,9 +78,9 @@ public class App {
 	public void spawn() {
 		mainWindow = new JFrame();
 		if(dev) {
-			mainWindow.setSize(350, 450);
+			mainWindow.setSize(350, 250);
 		} else {
-			mainWindow.setSize(300, 400);
+			mainWindow.setSize(300, 200);
 		}
 		mainWindow.setResizable(false);
 		mainWindow.setLocationRelativeTo(null);
@@ -109,7 +109,7 @@ public class App {
 		JPanel textPanel = new JPanel();
 		textPanel.setPreferredSize(new Dimension(300, 200));
 		
-		mainWindow.add(textPanel);
+		//mainWindow.add(textPanel);
 		
 		JPanel buttonPanel = new JPanel();
 		JButton button = new JButton();
@@ -117,10 +117,10 @@ public class App {
 		JButton button2 = new JButton();
 		JButton button3 = new JButton();
 		textPanel.setBackground(Color.BLACK);
-		button.setText("Resize window");
+		//button.setText("Resize window");
 		button1.setText("Credits");
 		
-		buttonPanel.add(button);
+		//buttonPanel.add(button);
 		buttonPanel.add(button1);
 		
 		if (dev) {
@@ -134,7 +134,7 @@ public class App {
 			button3.setText("CONSOLE");
 			button4.setText("DEV VIEW");
 
-			buttonPanel2.add(button2);
+			//buttonPanel2.add(button2);
 			buttonPanel2.add(button3);
 			buttonPanel2.add(button4);
 			buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 1, 10));
@@ -181,9 +181,9 @@ public class App {
 			button2.setText("Debug mode");
 			button3.setText("Open console");
 
-			buttonPanel.add(button);
+			//buttonPanel.add(button);
 			buttonPanel.add(button1);
-			buttonPanel.add(button2);
+			//buttonPanel.add(button2);
 			buttonPanel.add(button3);
 			buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 			mainWindow.add(buttonPanel);
@@ -260,7 +260,7 @@ public class App {
 					consoleWindow.setSize(1000, 400);
 					JTextArea logs = new JTextArea();
 					try {
-						logs.read(new FileReader(Main.dataFolder.toString() + "latest.log"), "Loading...");
+						logs.read(new FileReader(Main.dataFolder.toString() + "/latest.log"), "Loading...");
 					} catch (FileNotFoundException e1) {
 						logger.log(Level.SEVERE, e1.getMessage(), e1.getCause());
 					} catch (IOException e1) {

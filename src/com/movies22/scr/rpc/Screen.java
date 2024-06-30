@@ -38,7 +38,11 @@ public class Screen {
 			newY = y + this.height;
 			break;
 		}
-		return new Position(newX + this.offX, newY + this.offY);
+		return new Position(newX, newY);
+	}
+	
+	public int getScale(Double pixel, Boolean vertical) {
+		return (int) (vertical ? Math.round(pixel*this.height) : Math.round(pixel*this.width));
 	}
 
 	public class Position {

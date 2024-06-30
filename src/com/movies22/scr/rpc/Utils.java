@@ -34,6 +34,166 @@ public class Utils {
 		return dimg;
 	}
 
+	public static String getDest(char a, Operators operator) {
+		String currentDest;
+		char b = (char) (a + 32); //makes character lowercase
+		switch (b) {
+		case 'a':
+			currentDest = "Airport Central";
+			break;
+		case 'b':
+			currentDest = "Benton";
+			break;
+		case 'c':
+			currentDest = "Beechley";
+			break;
+		case 'd':
+			currentDest = "Willowfield";
+			break;
+		case 'e':
+			currentDest = "Edgemead";
+			break;
+		case 'f':
+			currentDest = "Whitefield";
+			break;
+		case 'g':
+			currentDest = "Greenfield";
+			break;
+		case 'h':
+			currentDest = "Newry Harbour";
+			break;
+		case 'i':
+			currentDest = "St Helens Bridge";
+			break;
+		case 'j':
+			currentDest = "Farleigh";
+			break;
+		case 'k':
+			currentDest = "Leighton West";
+			break;
+		case 'l':
+			currentDest = "Llyn-by-the-Sea";
+			break;
+		case 'm':
+			currentDest = "Morganstown";
+			break;
+		case 'n':
+			currentDest = "Newry";
+			break;
+		case 'o':
+			currentDest = "Connolly";
+			break;
+		case 'p':
+			currentDest = operator == Operators.AIRLINK ? "Airport Parkway"
+					: "Port Benton";
+			break;
+		case 'q':
+			currentDest = "Esterfield";
+			break;
+		case 'r':
+			currentDest = "Leighton Stepford Road";
+			break;
+		case 's':
+			currentDest = "Stepford Central";
+			break;
+		case 't':
+			currentDest = "Leighton City";
+			break;
+		case 'u':
+			currentDest = "Stepford UFC";
+			break;
+		case 'v':
+			currentDest = "Stepford Victoria";
+			break;
+		case 'w':
+			currentDest = "Westwyvern";
+			break;
+		case 'x':
+			currentDest = "Terminal 2";
+			break;
+		case 'y':
+			currentDest = "Berrily";
+			break;
+		case 'z':
+			currentDest = "Terminal 3";
+			break;
+		default:
+			currentDest = "Unknown";
+			break;
+		}
+		return currentDest;
+	}
+	
+	public static String shortify(String s) {
+		s = s.replaceAll("\\n", "");
+		if (s.equals("Leighton Stepford Road"))
+			return "Leighton Step Rd";
+		if (s.equals("Millcastle Racecourse"))
+			return "Mill. Racecourse";
+		if (s.equals("Stepford United Football"))
+			return "Stepford UFC";
+		if (s.equals("Cambridge Street..."))
+			return "Cambridge Street Pkw";
+		return s;
+	}
+
+	public static String shortify2(String s) {
+		s = s.replaceAll("\\n", "");
+		if (s.equals("Stepford United Football Club"))
+			return "Stepford UFC";
+		return s;
+	}
+
+	public static String parseHeadcode(String h, Operators c) {
+		char prefix = h.charAt(0);
+		char dest;
+		switch (h.charAt(1)) {
+		case '1':
+			dest = 'I';
+			break;
+		case '4':
+			dest = c == Operators.WATERLINE ? 'J' : 'A';
+			break;
+		case '5':
+			dest = 'S';
+			break;
+		case '8':
+			dest = 'S';
+			break;
+		case '0':
+			dest = 'O';
+			break;
+		case '6':
+			dest = 'G';
+			break;
+		case '7':
+			dest = 'T';
+			break;
+		default:
+			dest = h.charAt(1);
+			break;
+		}
+		char number1 = h.charAt(2);
+		char number2 = h.length() > 3 ? h.charAt(3) : h.charAt(2);
+		switch (number1) {
+		case 'o':
+			number1 = '0';
+			break;
+		case 'O':
+			number1 = '0';
+			break;
+		}
+		switch (number2) {
+		case 'o':
+			number2 = '0';
+			break;
+		case 'O':
+			number2 = '0';
+			break;
+		}
+		return "" + prefix + dest + number1 + number2;
+	}
+	
 	public static int getSpeed(String s, int fallback) {
 		if(s.contains("125")) return 125;
 		if(s.contains("110")) return 110;
@@ -78,7 +238,6 @@ public class Utils {
 				return;
 			}
 			if(word.getText().startsWith(".") || word.getText().startsWith("-") || word.getText().startsWith("1") || word.getText().startsWith("9") || word.getText().startsWith("7") || word.getText().isBlank()) {
-				//System.out.println("Ignored " + word.getText());
 				g2.setColor(Color.RED);
 				Rectangle bounds = word.getBoundingBox();
 				g2.draw(bounds);
