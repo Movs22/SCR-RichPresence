@@ -1,5 +1,7 @@
 package com.movies22.scr.rpc;
 
+import com.movies22.scr.rpc.elements.Anchor;
+
 public class Screen {
 	private int width;
 	private int height;

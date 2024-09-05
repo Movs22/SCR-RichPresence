@@ -35,6 +35,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
 public class App {
@@ -57,17 +58,17 @@ public class App {
 	
 	public App(Boolean d) {
 		this.dev = d;
-		this.logger = Main.logger;
-		this.rpc = Main.rpc;
+		this.logger = MainOld.logger;
+		this.rpc = MainOld.rpc;
 	}
 	
 	public void updateStatus(String title, String desc, String... imgKey) {
 		status1.setText(title);
 		status2.setText(desc);
-		if(Main.overrideStatus) {
-			rpc.updateStatus("Testing SCR-RichPresence", "in a dev environment", imgKey);
+		if(MainOld.overrideStatus) {
+			//rpc.updateStatus("Testing SCR-RichPresence", "in a dev environment", imgKey);
 		} else {
-			rpc.updateStatus(title, desc, imgKey);
+			//rpc.updateStatus(title, desc, imgKey);
 		}
 	}
 	
@@ -78,7 +79,7 @@ public class App {
 	public void spawn() {
 		mainWindow = new JFrame();
 		if(dev) {
-			mainWindow.setSize(350, 250);
+			mainWindow.setSize(350, 350);
 		} else {
 			mainWindow.setSize(300, 200);
 		}
@@ -156,12 +157,12 @@ public class App {
 						devWindow.setVisible(true);
 						devWindow.add(debugImage);
 						devWindow.setSize(1920/2+100, 1080/2+100);
-						Main.debugDraw = true;
+						MainOld.debugDraw = true;
 						devWindow.addWindowListener(new WindowAdapter() {
 
 							@Override
 							public void windowClosing(WindowEvent e) {
-								Main.debugDraw = false;
+								MainOld.debugDraw = false;
 								devWindow = null;
 							}
 
@@ -193,7 +194,7 @@ public class App {
 		if(dev) {
 			JPanel devPanel = new JPanel();
 			devPanel.setLayout(new GridLayout(2, 1, 3, 3));
-			devPanel.setPreferredSize(new Dimension(300, 50));
+			devPanel.setPreferredSize(new Dimension(300, 100));
 			JLabel title = new JLabel("DEVELOPER | Override activity");
 			devPanel.add(title);
 			JPanel devRowPanel = new JPanel();
@@ -206,10 +207,10 @@ public class App {
 				public void actionPerformed(ActionEvent e) {
 					CurrentWindow sel = (CurrentWindow) statusMenu.getSelectedItem();
 					if(sel == CurrentWindow.UNKNOWN) {
-						Main.overrideStatus = false;
+						MainOld.overrideStatus = false;
 					} else {
-						Main.overrideStatus = true;
-						Main.overriden = sel;
+						MainOld.overrideStatus = true;
+						MainOld.overriden = sel;
 					}
 				}
 			});
@@ -220,7 +221,39 @@ public class App {
 			devPanel.setBorder(BorderFactory.createEmptyBorder(3, 10, 3, 10));
 			devPanel.add(devRowPanel);
 			
+			JPanel devPanel2 = new JPanel();
+			devPanel2.setLayout(new GridLayout(2, 1, 3, 3));
+			devPanel2.setPreferredSize(new Dimension(300, 50));
+			JLabel title2 = new JLabel("DEVELOPER | Override party");
+			devPanel2.add(title2);
+			JPanel devRowPanel2 = new JPanel();
+			devRowPanel2.setLayout(new GridLayout(1, 2, 3, 3));
+			JPanel devButtonPanel2 = new JPanel();
+			devButtonPanel2.setLayout(new GridLayout(2, 1, 3, 3));
+			JTextField statusMenu2 = new JTextField();
+			JTextField statusMenu3 = new JTextField();
+			JButton overrideButton2 = new JButton();
+			overrideButton2.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					//MainOld.rpc.setParty(statusMenu2.getText(), statusMenu3.getText());
+				}
+			});
+			
+			statusMenu2.setText("ae488379-351d-4a4f-ad32-2b9b01c91657");
+			statusMenu3.setText("MTI4NhM5OjFp1mhuZToxMjMxMjM= ");
+			
+			overrideButton2.setText("Override");
+			devButtonPanel2.add(statusMenu2);
+			devButtonPanel2.add(statusMenu3);
+			devRowPanel2.add(devButtonPanel2);
+			devRowPanel2.add(overrideButton2);
+			devPanel2.setBorder(BorderFactory.createEmptyBorder(3, 10, 3, 10));
+			devPanel2.add(devRowPanel2);
+			
 			mainWindow.add(devPanel);
+			mainWindow.add(devPanel2);
 		}
 		
 		mainWindow.add(statusFrame);
@@ -261,7 +294,7 @@ public class App {
 					consoleWindow.setSize(1000, 400);
 					JTextArea logs = new JTextArea();
 					try {
-						logs.read(new FileReader(Main.dataFolder.toString() + "/latest.log"), "Loading...");
+						logs.read(new FileReader(MainOld.dataFolder.toString() + "/latest.log"), "Loading...");
 					} catch (FileNotFoundException e1) {
 						logger.log(Level.SEVERE, e1.getMessage(), e1.getCause());
 					} catch (IOException e1) {
@@ -301,7 +334,7 @@ public class App {
 						public void run() {
 							while (true) {
 								try {
-									logs.read(new FileReader(Main.dataFolder.toString() + "/latest.log"), "Loading...");
+									logs.read(new FileReader(MainOld.dataFolder.toString() + "/latest.log"), "Loading...");
 								} catch (FileNotFoundException e1) {
 									logger.log(Level.SEVERE, e1.getMessage(), e1.getCause());
 								} catch (IOException e1) {
@@ -338,7 +371,7 @@ public class App {
 			}
 
 		});
-		InputStream r = Main.class.getResourceAsStream("resources/icon.png");
+		InputStream r = MainOld.class.getResourceAsStream("resources/icon.png");
 		try {
 			mainWindow.setIconImage(ImageIO.read(r));
 		} catch (IOException e) {

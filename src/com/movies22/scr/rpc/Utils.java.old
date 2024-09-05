@@ -8,6 +8,11 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.movies22.scr.rpc.interfaces.RECT;
+import com.movies22.scr.rpc.interfaces.User32;
+import com.movies22.scr.rpc.interfaces.WindowInfo;
+import com.sun.jna.Native;
+
 import net.sourceforge.tess4j.Word;
 
 
@@ -193,64 +198,14 @@ public class Utils {
 		}
 		return "" + prefix + dest + number1 + number2;
 	}
-	
-	public static int getSpeed(String s, int fallback) {
-		if(s.contains("125")) return 125;
-		if(s.contains("110")) return 110;
-		if(s.contains("100")) return 100;
-		if(s.contains("90")) return 90;
-		if(s.contains("80")) return 80;
-		if(s.contains("75")) return 75;
-		if(s.contains("70")) return 70;
-		if(s.contains("65")) return 65;
-		if(s.contains("60")) return 60;
-		if(s.contains("55")) return 55;
-		if(s.contains("50")) return 50;
-		if(s.contains("45")) return 45;
-		if(s.contains("30")) return 30;
-		if(s.contains("15")) return 15;
-		if(s.contains("10")) return 10;
-		if(s.contains("5")) return 5;
-		return fallback;
-	}
-	
-	public static Boolean isStopMarker(Color col, Color n, Color s, Color e, Color w) {
-		return (isBlack(n) || isBlack(s)|| isBlack(e) || isBlack(w)) && col.getRed() > 80 && Math.abs(col.getRed() - col.getGreen()) < 15 && Math.abs(col.getGreen() - col.getBlue()) < 15;
-	}
-	
-	public static Boolean isBlack(Color n) {
-		return isWhite(n) || (n.getRed() < 5 && n.getGreen() < 15 && n.getBlue() < 30);
-	}
-	
-	public static Boolean isWhite(Color col) {
-		return col.getRed() > 80 && Math.abs(col.getRed() - col.getGreen()) < 15 && Math.abs(col.getGreen() - col.getBlue()) < 15;
-	}
-	
-	public static String checkCarmarker(List<Word> words, BufferedImage ctx) {
-		List<Word> results = new ArrayList<Word>();
-		Graphics2D g2 = ctx.createGraphics();
-		words.forEach(word -> {
-			if(word.getConfidence() < 50) {
-				//System.out.println("Ignored " + word.getText() + " | conf: " + word.getConfidence());
-				g2.setColor(Color.PINK);
-				Rectangle bounds = word.getBoundingBox();
-				g2.draw(bounds);
-				return;
-			}
-			if(word.getText().startsWith(".") || word.getText().startsWith("-") || word.getText().startsWith("1") || word.getText().startsWith("9") || word.getText().startsWith("7") || word.getText().isBlank()) {
-				g2.setColor(Color.RED);
-				Rectangle bounds = word.getBoundingBox();
-				g2.draw(bounds);
-				return;
-			}
-			results.add(word);
-			g2.setColor(Color.GREEN);
-			Rectangle bounds = word.getBoundingBox();
-			g2.draw(bounds);
-		});
-		results.sort((a, b) -> Math.round(b.getConfidence() - a.getConfidence()));
-		if(results.size() == 0) return "";
-		//System.out.println(results);
-		return results.get(0).getText();
+
+	public static WindowInfo getWindowInfo(int hWnd) {
+		RECT r = new RECT();
+		User32.instance.GetWindowRect(hWnd, r);
+		byte[] buffer = new byte[1024];
+		User32.instance.GetWindowTextA(hWnd, buffer, buffer.length);
+		String title = Native.toString(buffer);
+		WindowInfo info = new WindowInfo(hWnd, r, title);
+		return info;
 	}
 }

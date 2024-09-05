@@ -16,6 +16,9 @@
 	<classpathentry exported="true" kind="lib" path="jars/jna-5.14.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="jars/jai-imageio-core-1.4.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="jars/tess4j-5.11.0.jar"/>
-	<classpathentry exported="true" kind="lib" path="jars/discord-rpc.jar"/>
+	<classpathentry kind="lib" path="jars/discord-rpc.jar"/>
+	<classpathentry kind="lib" path="jars/json-20240303.jar"/>
+	<classpathentry kind="lib" path="jars/DiscordIPC-Buttons-1.0.0.jar"/>
+	<classpathentry kind="lib" path="jars/jna-platform-5.14.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

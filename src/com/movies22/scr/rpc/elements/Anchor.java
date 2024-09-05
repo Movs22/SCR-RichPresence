@@ -1,4 +1,4 @@
-package com.movies22.scr.rpc;
+package com.movies22.scr.rpc.elements;
 
 public class Anchor {
 	public enum Horizontal {

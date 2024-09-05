@@ -51,6 +51,10 @@ public class Config {
 		return config.get(key);
 	}
 	
+	public Boolean exists(String key) {
+		return config.get(key) != null;
+	}
+	
 	public void saveAll() {
 		try {
 			FileWriter w = new FileWriter(file);
